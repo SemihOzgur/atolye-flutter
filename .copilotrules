@@ -1,0 +1,94 @@
+# LEATHER CARE ADMINISTRATIVE WINDOWS DESKTOP - AI SYSTEM INSTRUCTIONS
+
+You are an expert Flutter & Dart developer. You write clean, robust, and type-safe code following the "Feature-First Clean Architecture" principles. You must strictly adhere to the project business rules, UI guidelines, and database specifications.
+
+---
+
+## 🏗️ 1. ARCHITECTURAL PATTERN (FEATURE-FIRST)
+Every feature under `lib/features/` must be structured with three distinct layers:
+
+1. **`domain/`** (Pure Dart, No external dependencies or JSON conversions):
+   - `entities/`: Pure data schemas used directly by the UI (no 'fromJson'/'toJson' here).
+   - `repositories/`: Abstract classes (contracts) defining data access interfaces.
+   - `usecases/`: Single-responsibility classes implementing specific business logic (optional/lightweight).
+
+2. **`data/`** (External communications & serialization):
+   - `models/`: Classes extending/implementing Entities. Must use `freezed` and `json_serializable` for code generation.
+   - `datasources/`: Network API client interactions (via Dio).
+   - `repositories/`: Implementation classes of the domain contracts.
+
+3. **`presentation/`** (User interface & interaction):
+   - `bloc/`: State management using `flutter_bloc` (Cubit or Bloc) and `freezed` for union states.
+   - `pages/`: Desktop screen views.
+   - `widgets/`: Feature-specific small UI components.
+
+---
+
+## 🔐 2. CODE GENERATION & FREEZED STANDARDS
+- All Models and States must be generated using `@freezed` and `@JsonSerializable(fieldRename: FieldRename.camel)`.
+- Never write `fromJson` or `copyWith` manually. Always use Freezed features.
+- Run the build watcher in your terminal: `dart run build_runner watch --delete-conflicting-outputs`.
+
+---
+
+## ⚙️ 3. CORE TECHNICAL & BUSINESS RULES (CRITICAL)
+
+### A. Authentication & Security
+- **JWT Lifespan:** JWT token is single, long-lived (30 days). There is NO refresh token endpoint[cite: 1].
+- **Local Storage:** Store the JWT safely using `flutter_secure_storage` inside the native Windows Registry.
+- **Auto Logout:** If any HTTP request returns '401 Unauthorized', clear local storage and force redirect the UI to the Login Page[cite: 1].
+
+### B. Input Normalization & Search
+- **Phone Numbers:** All phone entries must be normalized to E.164 format: entrance might be `05XXXXXXXXX` or `5XXXXXXXXX`, but it MUST be normalized and stored as `+905XXXXXXXXX`[cite: 1]. Reject non-Turkish mobile formats with a 400 Bad Request error[cite: 1].
+- **Search:** Search queries must support partial searches using functional index logic (`LIKE '%' || digits` or `ILIKE '%term%'`)[cite: 1].
+
+### C. Error Handling (RFC 7807)
+- The API returns errors in RFC 7807 `ProblemDetails` / `ValidationProblemDetails` format[cite: 1].
+- You must parse the JSON errors into a local `ApiException` class and extract the Turkish `detail` string alongside custom `errorCode` extensions (e.g., `DUPLICATE_PHONE`, `INVALID_STATUS_TRANSITION`)[cite: 1].
+- Map these `errorCode` constants to custom UI actions (e.g., auto-routing to existing customer on duplicate phone)[cite: 1].
+
+### D. Timezones & Currency
+- **Timezone:** All timestamps stored on the database are in UTC[cite: 1]. Convert them to Local Turkish Time (`Europe/Istanbul`) only for UI rendering. NETGSM `consentDate` is the ONLY exception where time must be sent in TR local timezone format[cite: 1].
+- **Currency:** All financial fields must use Dart's `double` or `double` wrapped as `Decimal` (no raw double float precision issues). Display with 2 decimal points using `MidpointRounding.AwayFromZero`[cite: 1]. Assume Turkish Lira (TRY) currency globally[cite: 1].
+
+### E. S3/MinIO Media Upload (The 3-Step Dance)
+- Large videos and photos MUST NOT pass through the API server[cite: 1]. Implement the following flow:
+  1. Request presigned PUT URL: `POST /api/work-orders/{id}/media/request-upload`[cite: 1].
+  2. Perform binary HTTP PUT directly to the returned `uploadUrl` using Dio's stream upload with progress bar indicators[cite: 1].
+  3. Confirm upload: `POST /api/work-orders/{id}/media/confirm`[cite: 1].
+- Format Constraints: Only `image/jpeg`, `image/png` (No HEIC) and `video/mp4` are allowed[cite: 1]. Max video size: 500MB, Max photo size: 25MB[cite: 1].
+
+---
+
+## 🖥️ 4. WINDOWS DESKTOP UI DESIGN GUIDELINES
+- **Responsive Layout:** The admin UI is a fixed desktop environment. Keep a minimum screen dimension restriction of `1280x800` using the `window_manager` package.
+- **Double-click Prevention:** Prevent duplicate submissions (such as rapid double-clicking on submit buttons) at the frontend UI level by disabling buttons during loading/submitting states[cite: 1].
+- **Sidebar & Shell:** Implement a persistent navigation sidebar on the left and a dynamic context layout area on the right.
+
+---
+
+## ⚡ 5. CODE GENERATION EXAMPLES
+
+### Example 1: Freezed Model Definition
+```dart
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'customer_model.freezed.dart';
+part 'customer_model.g.dart';
+
+@freezed
+class CustomerModel with _$CustomerModel {
+  const factory CustomerModel({
+    required int id,
+    required String firstName,
+    required String lastName,
+    required String phone,
+    String? email,
+    String? address,
+    required String iysConsentStatus,
+    DateTime? iysConsentAt,
+    required DateTime createdAt,
+  }) = _CustomerModel;
+
+  factory CustomerModel.fromJson(Map<String, dynamic> json) => _$CustomerModelFromJson(json);
+}
