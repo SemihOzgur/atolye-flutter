@@ -1,27 +1,65 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'core/di/injection.dart';
+import 'core/services/diagnostics_logger.dart';
+import 'core/services/window_guard_service.dart';
+import 'core/theme/app_colors.dart';
+import 'core/theme/app_decorations.dart';
+import 'core/theme/app_dimensions.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await setupLocator();
+
+  final diagnosticsLogger = getIt<DiagnosticsLogger>();
+  await diagnosticsLogger.initialize();
+
+  final windowGuardService = getIt<WindowGuardService>();
+  await windowGuardService.initialize(
+    onDirtyCloseRequested: () async {
+      await diagnosticsLogger.log(
+        'WARN',
+        'Kaydedilmemiş değişiklikler nedeniyle kapatma isteği engellendi.',
+      );
+    },
+  );
+
   if (Platform.isWindows || Platform.isMacOS) {
     await windowManager.ensureInitialized();
+
     const windowOptions = WindowOptions(
-      size: Size(1280, 800),
-      minimumSize: Size(1280, 800),
+      size: Size(
+        AppDimensions.windowMinWidth,
+        AppDimensions.windowMinHeight,
+      ),
+      minimumSize: Size(
+        AppDimensions.windowMinWidth,
+        AppDimensions.windowMinHeight,
+      ),
       center: true,
-      backgroundColor: Color(0xFF121212),
+      backgroundColor: AppColors.background,
       skipTaskbar: false,
       title: 'Leather Care Admin',
     );
 
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
+    await windowManager.waitUntilReadyToShow(
+      windowOptions,
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+      },
+    );
   }
+
+  await diagnosticsLogger.log(
+    'INFO',
+    'Leather Care Admin uygulaması başlatıldı.',
+  );
 
   runApp(const LeatherCareAdminApp());
 }
@@ -31,9 +69,16 @@ class LeatherCareAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF1B5E20),
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
       brightness: Brightness.dark,
+    ).copyWith(
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      surface: AppColors.surfaceElevated,
+      onPrimary: AppColors.textPrimary,
+      onSecondary: AppColors.textPrimary,
+      onSurface: AppColors.textPrimary,
     );
 
     return MaterialApp(
@@ -42,73 +87,66 @@ class LeatherCareAdminApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: baseColorScheme.copyWith(
-          primary: const Color(0xFF1B5E20),
-          secondary: const Color(0xFF4CAF50),
-          surface: const Color(0xFF1A1D1B),
-          onSurface: const Color(0xFFF5F7F5),
-        ),
-        scaffoldBackgroundColor: const Color(0xFF0F1110),
+        colorScheme: colorScheme,
+        scaffoldBackgroundColor: AppColors.background,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF121513),
-          foregroundColor: Color(0xFFF5F7F5),
-          centerTitle: false,
+          backgroundColor: AppColors.surfaceElevated,
+          foregroundColor: AppColors.textPrimary,
           elevation: 0,
+          centerTitle: false,
         ),
         cardTheme: CardThemeData(
-          color: const Color(0xFF161916),
+          color: AppColors.surface,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFF263229), width: 1),
+            borderRadius: AppDecorations.borderRadiusXl,
+            side: const BorderSide(color: AppColors.border, width: 1),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF141815),
-          hintStyle: const TextStyle(color: Color(0xFF8D978F)),
-          labelStyle: const TextStyle(color: Color(0xFFD9E2DA)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF2D3A31)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF2D3A31)),
-          ),
+          fillColor: AppColors.surfaceMuted,
+          hintStyle: const TextStyle(color: AppColors.hint),
+          labelStyle: const TextStyle(color: AppColors.textSecondary),
+          border: AppDecorations.outlineBorder,
+          enabledBorder: AppDecorations.outlineBorder,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.4),
+            borderRadius: AppDecorations.borderRadiusM,
+            borderSide: const BorderSide(
+              color: AppColors.secondary,
+              width: 1.4,
+            ),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1B5E20),
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(52),
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textPrimary,
+            disabledBackgroundColor: AppColors.border,
+            minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppDecorations.borderRadiusL,
             ),
           ),
         ),
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
-            fontSize: 32,
+            fontSize: AppDimensions.fontTitle,
             fontWeight: FontWeight.w700,
-            color: Color(0xFFF5F7F5),
+            color: AppColors.textPrimary,
           ),
           headlineMedium: TextStyle(
-            fontSize: 24,
+            fontSize: AppDimensions.fontSection,
             fontWeight: FontWeight.w700,
-            color: Color(0xFFF5F7F5),
+            color: AppColors.textPrimary,
           ),
           bodyLarge: TextStyle(
-            fontSize: 16,
-            color: Color(0xFFD9E2DA),
+            fontSize: AppDimensions.fontBody,
+            color: AppColors.textSecondary,
           ),
           bodyMedium: TextStyle(
-            fontSize: 14,
-            color: Color(0xFFB9C3BB),
+            fontSize: AppDimensions.fontCaption,
+            color: AppColors.textMuted,
           ),
         ),
       ),
@@ -123,13 +161,13 @@ class LoginPlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0F1110),
+              AppColors.background,
               Color(0xFF121813),
               Color(0xFF1A241D),
             ],
@@ -137,57 +175,58 @@ class LoginPlaceholderPage extends StatelessWidget {
         ),
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
+            constraints: const BoxConstraints(
+              maxWidth: AppDimensions.loginCardMaxWidth,
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppDimensions.spaceXl),
               child: Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(AppDimensions.spaceXl),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 56,
-                        height: 56,
+                        width: AppDimensions.space2xl + AppDimensions.spaceL,
+                        height: AppDimensions.space2xl + AppDimensions.spaceL,
                         decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF1B5E20).withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.primary.withValues(alpha: 0.16),
+                          borderRadius: AppDecorations.borderRadiusL,
                         ),
                         child: const Icon(
                           Icons.lock_outline_rounded,
-                          color: Color(0xFF7FCF88),
+                          color: AppColors.success,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.spaceL),
                       Text(
                         'Giriş',
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppDimensions.spaceS),
                       Text(
                         'Leather Care Admin paneline hoş geldiniz. Bu ekran daha sonra auth feature altındaki gerçek giriş akışına bağlanacak.',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      const SizedBox(height: 28),
-                      TextField(
+                      const SizedBox(height: AppDimensions.spaceXl),
+                      const TextField(
                         enabled: false,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Kullanıcı adı',
                           hintText: 'Yakında bağlanacak',
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
+                      const SizedBox(height: AppDimensions.spaceM),
+                      const TextField(
                         enabled: false,
                         obscureText: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Şifre',
                           hintText: 'Yakında bağlanacak',
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.spaceL),
                       ElevatedButton(
                         onPressed: null,
                         child: const Text('Giriş Yap'),
