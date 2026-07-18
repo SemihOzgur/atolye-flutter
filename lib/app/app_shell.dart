@@ -6,7 +6,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_decorations.dart';
 import '../core/theme/app_dimensions.dart';
 import '../core/widgets/app_logo_mark.dart';
-import 'app_router.dart';
+import 'app_routes.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child, required this.onLogout});

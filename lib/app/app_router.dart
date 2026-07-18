@@ -8,22 +8,10 @@ import '../features/customer/presentation/pages/customer_page.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../features/social_media/presentation/pages/social_media_page.dart';
 import '../features/work_order/presentation/pages/work_order_page.dart';
+import 'app_routes.dart';
 import 'app_shell.dart';
 import 'app_startup_controller.dart';
 import 'splash_page.dart';
-
-class AppRoutes {
-  AppRoutes._();
-
-  static const String splash = '/';
-  static const String login = '/login';
-  static const String dashboard = '/dashboard';
-  static const String customers = '/customers';
-  static const String workOrders = '/work-orders';
-  static const String catalog = '/catalog';
-  static const String socialMedia = '/social-media';
-  static const String archive = '/archive';
-}
 
 GoRouter buildAppRouter(
   AppStartupController startupController, {

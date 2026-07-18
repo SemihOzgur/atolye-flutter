@@ -4,6 +4,8 @@ import 'package:leather_care_admin/core/constants/storage_keys.dart';
 import 'package:leather_care_admin/core/di/injection.dart';
 import 'package:leather_care_admin/core/services/storage_service.dart';
 import 'package:leather_care_admin/features/auth/data/auth_repository.dart';
+import 'package:leather_care_admin/features/dashboard/data/dashboard_repository.dart';
+import 'package:leather_care_admin/features/dashboard/data/dto/dashboard_summary_dto.dart';
 import 'package:leather_care_admin/main.dart';
 
 void main() {
@@ -12,6 +14,13 @@ void main() {
       getIt.unregister<IAuthRepository>();
     }
     getIt.registerLazySingleton<IAuthRepository>(_FakeAuthRepository.new);
+
+    if (getIt.isRegistered<IDashboardRepository>()) {
+      getIt.unregister<IDashboardRepository>();
+    }
+    getIt.registerLazySingleton<IDashboardRepository>(
+      _FakeDashboardRepository.new,
+    );
   });
 
   tearDown(() async {
@@ -51,6 +60,23 @@ void main() {
 class _FakeAuthRepository implements IAuthRepository {
   @override
   Future<void> login({required String email, required String password}) async {}
+}
+
+class _FakeDashboardRepository implements IDashboardRepository {
+  @override
+  Future<DashboardSummaryDto> fetchSummary() async {
+    return const DashboardSummaryDto(
+      receivedCount: 0,
+      inProgressCount: 0,
+      readyCount: 0,
+      receivedTodayCount: 0,
+      deliveredTodayCount: 0,
+      dailyRevenue: 0,
+      monthlyRevenue: 0,
+      readyWaitingOverdueCount: 0,
+      diskUsageBytes: 0,
+    );
+  }
 }
 
 class _FakeSecureStorageService implements ISecureStorageService {
