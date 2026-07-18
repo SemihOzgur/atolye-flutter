@@ -23,4 +23,20 @@ class AppStartupController extends ChangeNotifier {
         : AppLaunchState.unauthenticated;
     notifyListeners();
   }
+
+  void markAuthenticated() {
+    _state = AppLaunchState.authenticated;
+    notifyListeners();
+  }
+
+  void handleUnauthorized() {
+    _state = AppLaunchState.unauthenticated;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await _storageService.delete(StorageKeys.authToken);
+    _state = AppLaunchState.unauthenticated;
+    notifyListeners();
+  }
 }

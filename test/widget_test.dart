@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leather_care_admin/core/constants/storage_keys.dart';
+import 'package:leather_care_admin/core/di/injection.dart';
 import 'package:leather_care_admin/core/services/storage_service.dart';
+import 'package:leather_care_admin/features/auth/data/auth_repository.dart';
 import 'package:leather_care_admin/main.dart';
 
 void main() {
+  setUp(() {
+    if (getIt.isRegistered<IAuthRepository>()) {
+      getIt.unregister<IAuthRepository>();
+    }
+    getIt.registerLazySingleton<IAuthRepository>(_FakeAuthRepository.new);
+  });
+
+  tearDown(() async {
+    await getIt.reset();
+  });
+
   testWidgets('shows login when no token is stored', (tester) async {
     await tester.pumpWidget(
       LeatherCareAdminApp(storageService: _FakeSecureStorageService()),
@@ -13,12 +26,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Giriş'), findsOneWidget);
-    expect(
-      find.text(
-        'Auth feature dalinda gercek kimlik dogrulama akisi burada tamamlanacak.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('DoTiKa admin paneline giriş yapın.'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'E-posta'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Şifre'), findsOneWidget);
   });
 
   testWidgets('shows shell dashboard when token exists', (tester) async {
@@ -36,6 +46,11 @@ void main() {
     expect(find.text('Desktop Shell'), findsOneWidget);
     expect(find.text('Dashboard'), findsWidgets);
   });
+}
+
+class _FakeAuthRepository implements IAuthRepository {
+  @override
+  Future<void> login({required String email, required String password}) async {}
 }
 
 class _FakeSecureStorageService implements ISecureStorageService {

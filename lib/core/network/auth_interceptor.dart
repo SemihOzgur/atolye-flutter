@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import '../constants/api_endpoints.dart';
 import '../constants/storage_keys.dart';
 import '../services/storage_service.dart';
 
@@ -32,7 +33,9 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401) {
+    final isLoginRequest = err.requestOptions.path == ApiEndpoints.login.path;
+
+    if (err.response?.statusCode == 401 && !isLoginRequest) {
       await _storageService.delete(StorageKeys.authToken);
       if (!logoutStreamController.isClosed) {
         logoutStreamController.add(null);
