@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../features/archive/presentation/pages/archive_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/catalog/presentation/pages/catalog_page.dart';
-import '../features/customer/presentation/pages/customer_page.dart';
+import '../features/customer/presentation/pages/customer_detail_page.dart';
+import '../features/customer/presentation/pages/customer_form_page.dart';
+import '../features/customer/presentation/pages/customer_search_page.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../features/social_media/presentation/pages/social_media_page.dart';
 import '../features/work_order/presentation/pages/work_order_page.dart';
@@ -44,7 +46,19 @@ GoRouter buildAppRouter(
           ),
           GoRoute(
             path: AppRoutes.customers,
-            builder: (context, state) => const CustomerPage(),
+            builder: (context, state) => const CustomerSearchPage(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => const CustomerFormPage(),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => CustomerDetailPage(
+                  customerId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: AppRoutes.workOrders,

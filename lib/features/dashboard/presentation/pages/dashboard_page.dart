@@ -233,7 +233,13 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: AppDimensions.spaceM),
           Text(message, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: AppDimensions.spaceM),
-          ElevatedButton(onPressed: onRetry, child: const Text('Tekrar Dene')),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onRetry,
+              child: const Text('Tekrar Dene'),
+            ),
+          ),
         ],
       ),
     );

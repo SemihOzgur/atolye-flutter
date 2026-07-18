@@ -12,6 +12,7 @@ class ApiException implements Exception {
     this.errorCode,
     this.statusCode,
     this.fieldErrors = const <String, List<String>>{},
+    this.rawBody,
   });
 
   final String message;
@@ -20,6 +21,7 @@ class ApiException implements Exception {
   final String? errorCode;
   final int? statusCode;
   final Map<String, List<String>> fieldErrors;
+  final Map<String, dynamic>? rawBody;
 
   factory ApiException.fromDioException(DioException e) {
     final parsed = _parseProblemDetails(e.response?.data);
@@ -31,6 +33,7 @@ class ApiException implements Exception {
       errorCode: parsed.errorCode,
       statusCode: e.response?.statusCode,
       fieldErrors: parsed.fieldErrors,
+      rawBody: parsed.rawBody,
     );
 
     unawaited(
@@ -107,6 +110,7 @@ class ApiException implements Exception {
       detail: detail,
       errorCode: errorCode,
       fieldErrors: fieldErrors,
+      rawBody: map,
     );
   }
 }
@@ -118,6 +122,7 @@ class _ProblemDetails {
     this.detail,
     this.errorCode,
     this.fieldErrors = const <String, List<String>>{},
+    this.rawBody,
   });
 
   final String? message;
@@ -125,4 +130,5 @@ class _ProblemDetails {
   final String? detail;
   final String? errorCode;
   final Map<String, List<String>> fieldErrors;
+  final Map<String, dynamic>? rawBody;
 }

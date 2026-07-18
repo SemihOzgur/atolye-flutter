@@ -15,6 +15,7 @@ abstract class AppColors {
   static const Color textMuted = Color(0xFF7C8798);
   static const Color hint = Color(0xFFA0AAB8);
   static const Color success = Color(0xFF1FAA59);
+  static const Color warning = Color(0xFFE8A33D);
   static const Color error = Color(0xFFE5484D);
   static const Color shadow = Color(0x141A2233);
 
