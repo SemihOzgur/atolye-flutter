@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/network/auth_interceptor.dart';
 import '../core/services/storage_service.dart';
 import '../core/theme/app_theme.dart';
 import 'app_router.dart';
@@ -18,21 +19,54 @@ class LeatherCareApp extends StatefulWidget {
 }
 
 class _LeatherCareAppState extends State<LeatherCareApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
   late final ISecureStorageService _storageService;
   late final AppStartupController _startupController;
   late final GoRouter _router;
+  late final StreamSubscription<void> _sessionExpiredSubscription;
 
   @override
   void initState() {
     super.initState();
     _storageService = widget.storageService ?? SecureStorageService();
     _startupController = AppStartupController(_storageService);
-    _router = buildAppRouter(_startupController);
+    _router = buildAppRouter(_startupController, navigatorKey: _navigatorKey);
+    _sessionExpiredSubscription =
+        AuthInterceptor.logoutStreamController.stream.listen((_) {
+      _startupController.handleUnauthorized();
+      _showSessionExpiredDialog();
+    });
     unawaited(_startupController.initialize());
+  }
+
+  void _showSessionExpiredDialog() {
+    final context = _navigatorKey.currentState?.context;
+    if (context == null) {
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Oturum süresi doldu'),
+        content: const Text(
+          'Oturum süreniz doldu, lütfen tekrar giriş yapın.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Tamam'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _sessionExpiredSubscription.cancel();
     _startupController.dispose();
     super.dispose();
   }

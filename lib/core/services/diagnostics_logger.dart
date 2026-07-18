@@ -44,28 +44,33 @@ class DiagnosticsLogger {
     dynamic error,
     StackTrace? stack,
   ]) async {
-    if (!_isInitialized || _logFile == null) {
-      await initialize();
+    try {
+      if (!_isInitialized || _logFile == null) {
+        await initialize();
+      }
+
+      final timestamp = DateTime.now().toIso8601String();
+      final buffer = StringBuffer()
+        ..writeln('[$timestamp] [$level] $message');
+
+      if (error != null) {
+        buffer.writeln('Hata: $error');
+      }
+
+      if (stack != null) {
+        buffer.writeln('StackTrace:');
+        buffer.writeln(stack);
+      }
+
+      buffer.writeln();
+
+      await _logFile!.writeAsString(
+        buffer.toString(),
+        mode: FileMode.append,
+        encoding: utf8,
+      );
+    } catch (_) {
+      // Diagnostics logging is best-effort and must never crash the app.
     }
-
-    final timestamp = DateTime.now().toIso8601String();
-    final buffer = StringBuffer()..writeln('[$timestamp] [$level] $message');
-
-    if (error != null) {
-      buffer.writeln('Hata: $error');
-    }
-
-    if (stack != null) {
-      buffer.writeln('StackTrace:');
-      buffer.writeln(stack);
-    }
-
-    buffer.writeln();
-
-    await _logFile!.writeAsString(
-      buffer.toString(),
-      mode: FileMode.append,
-      encoding: utf8,
-    );
   }
 }

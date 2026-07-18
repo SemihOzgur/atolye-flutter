@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/archive/presentation/pages/archive_page.dart';
@@ -24,8 +25,12 @@ class AppRoutes {
   static const String archive = '/archive';
 }
 
-GoRouter buildAppRouter(AppStartupController startupController) {
+GoRouter buildAppRouter(
+  AppStartupController startupController, {
+  GlobalKey<NavigatorState>? navigatorKey,
+}) {
   return GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: startupController,
     routes: [
@@ -35,10 +40,15 @@ GoRouter buildAppRouter(AppStartupController startupController) {
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const LoginPage(),
+        builder: (context, state) => LoginPage(
+          startupController: startupController,
+        ),
       ),
       ShellRoute(
-        builder: (context, state, child) => AppShell(child: child),
+        builder: (context, state, child) => AppShell(
+          onLogout: startupController.logout,
+          child: child,
+        ),
         routes: [
           GoRoute(
             path: AppRoutes.dashboard,

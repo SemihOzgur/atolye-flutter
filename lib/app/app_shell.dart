@@ -9,9 +9,10 @@ import '../core/widgets/app_logo_mark.dart';
 import 'app_router.dart';
 
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.child});
+  const AppShell({super.key, required this.child, required this.onLogout});
 
   final Widget child;
+  final Future<void> Function() onLogout;
 
   int _selectedIndex(String location) {
     if (location.startsWith(AppRoutes.customers)) {
@@ -153,6 +154,13 @@ class AppShell extends StatelessWidget {
                           'Desktop Shell',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                      ),
+                      const SizedBox(width: AppDimensions.spaceM),
+                      IconButton(
+                        onPressed: onLogout,
+                        icon: const Icon(Icons.logout_rounded),
+                        color: AppColors.textMuted,
+                        tooltip: 'Çıkış Yap',
                       ),
                     ],
                   ),
