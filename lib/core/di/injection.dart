@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/dashboard/data/dashboard_repository.dart';
 import '../network/dio_client.dart';
 import '../services/diagnostics_logger.dart';
 import '../services/storage_service.dart';
@@ -33,6 +34,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IAuthRepository>()) {
     getIt.registerLazySingleton<IAuthRepository>(
       () => AuthRepository(getIt<Dio>(), getIt<ISecureStorageService>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IDashboardRepository>()) {
+    getIt.registerLazySingleton<IDashboardRepository>(
+      () => DashboardRepository(getIt<Dio>()),
     );
   }
 }

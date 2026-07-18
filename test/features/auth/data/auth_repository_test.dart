@@ -16,7 +16,7 @@ void main() {
   late AuthRepository repository;
 
   setUp(() {
-    dio = Dio(BaseOptions(baseUrl: 'https://domain.com'));
+    dio = Dio(BaseOptions(baseUrl: 'https://dotikadbm.com'));
     storage = _FakeSecureStorageService();
     repository = AuthRepository(dio, storage);
   });

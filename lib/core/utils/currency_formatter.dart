@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class CurrencyFormatter {
   CurrencyFormatter._();
 
@@ -31,12 +29,26 @@ class CurrencyFormatter {
     final roundedWhole = roundedTotalCents ~/ BigInt.from(100);
     final roundedCents = roundedTotalCents % BigInt.from(100);
 
-    final numberFormatter = NumberFormat.decimalPattern('tr_TR');
     final sign = isNegative && roundedTotalCents != BigInt.zero ? '-' : '';
-    final formattedWhole = numberFormatter.format(roundedWhole);
+    final formattedWhole = _groupThousands(roundedWhole);
     final formattedFraction =
         roundedCents.toString().padLeft(_fractionDigits, '0');
 
     return '$sign$formattedWhole,$formattedFraction ₺';
+  }
+
+  static String _groupThousands(BigInt value) {
+    final digits = value.toString();
+    final buffer = StringBuffer();
+
+    for (var i = 0; i < digits.length; i++) {
+      final remaining = digits.length - i;
+      if (i > 0 && remaining % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(digits[i]);
+    }
+
+    return buffer.toString();
   }
 }

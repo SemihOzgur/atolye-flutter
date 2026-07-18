@@ -22,7 +22,7 @@ class SecureStorageService implements ISecureStorageService {
           ),
           mOptions: MacOsOptions(
             accessibility: KeychainAccessibility.unlocked,
-            useDataProtectionKeyChain: true,
+            useDataProtectionKeyChain: false,
           ),
         );
 
