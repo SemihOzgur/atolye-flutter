@@ -198,20 +198,23 @@ class _LoginViewState extends State<_LoginView> {
                               ),
                             ],
                             const SizedBox(height: AppDimensions.spaceL),
-                            ElevatedButton(
-                              onPressed: (isSubmitting || isRateLimited)
-                                  ? null
-                                  : () => _submit(context),
-                              child: isSubmitting
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: AppColors.onPrimary,
-                                      ),
-                                    )
-                                  : const Text('Giriş Yap'),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: (isSubmitting || isRateLimited)
+                                    ? null
+                                    : () => _submit(context),
+                                child: isSubmitting
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.onPrimary,
+                                        ),
+                                      )
+                                    : const Text('Giriş Yap'),
+                              ),
                             ),
                             const SizedBox(height: AppDimensions.spaceM),
                             Container(

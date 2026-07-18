@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leather_care_admin/app/app_routes.dart';
 import 'package:leather_care_admin/core/di/injection.dart';
+import 'package:leather_care_admin/core/theme/app_theme.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
 import 'package:leather_care_admin/features/dashboard/data/dashboard_repository.dart';
 import 'package:leather_care_admin/features/dashboard/data/dto/dashboard_summary_dto.dart';
@@ -44,7 +45,7 @@ void main() {
         ),
       ],
     );
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
   const summaryWithWarnings = DashboardSummaryDto(
