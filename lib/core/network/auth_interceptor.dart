@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import '../constants/storage_keys.dart';
 import '../services/storage_service.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -17,7 +18,7 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storageService.read('auth_token');
+    final token = await _storageService.read(StorageKeys.authToken);
 
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -32,7 +33,7 @@ class AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     if (err.response?.statusCode == 401) {
-      await _storageService.delete('auth_token');
+      await _storageService.delete(StorageKeys.authToken);
       if (!logoutStreamController.isClosed) {
         logoutStreamController.add(null);
       }

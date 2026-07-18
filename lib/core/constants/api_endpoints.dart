@@ -10,7 +10,10 @@ class ApiRoute {
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl = 'http://dotikadbm.com';
+    static const String baseUrl = String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: 'https://domain.com',
+    );
 
   static const ApiRoute login = ApiRoute('/api/auth/login', HttpMethod.post);
 
