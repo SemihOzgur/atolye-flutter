@@ -9,7 +9,9 @@ import '../features/customer/presentation/pages/customer_form_page.dart';
 import '../features/customer/presentation/pages/customer_search_page.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../features/social_media/presentation/pages/social_media_page.dart';
-import '../features/work_order/presentation/pages/work_order_page.dart';
+import '../features/work_order/presentation/pages/work_order_detail_page.dart';
+import '../features/work_order/presentation/pages/work_order_form_page.dart';
+import '../features/work_order/presentation/pages/work_order_list_page.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
 import 'app_startup_controller.dart';
@@ -62,7 +64,23 @@ GoRouter buildAppRouter(
           ),
           GoRoute(
             path: AppRoutes.workOrders,
-            builder: (context, state) => const WorkOrderPage(),
+            builder: (context, state) => const WorkOrderListPage(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                builder: (context, state) => WorkOrderFormPage(
+                  customerId: int.tryParse(
+                    state.uri.queryParameters['customerId'] ?? '',
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                builder: (context, state) => WorkOrderDetailPage(
+                  workOrderId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: AppRoutes.catalog,

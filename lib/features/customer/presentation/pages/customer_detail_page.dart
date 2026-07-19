@@ -96,6 +96,14 @@ class _CustomerDetailViewState extends State<_CustomerDetailView> {
                           ),
                           IysStatusBadge(status: customer.iysConsentStatus),
                           const SizedBox(width: AppDimensions.spaceM),
+                          ElevatedButton(
+                            onPressed: () => context.go(
+                              '${AppRoutes.workOrders}/new'
+                              '?customerId=${customer.id}',
+                            ),
+                            child: const Text('Yeni İş Emri'),
+                          ),
+                          const SizedBox(width: AppDimensions.spaceM),
                           OutlinedButton(
                             onPressed: () async {
                               await Navigator.of(context).push(
