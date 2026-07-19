@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/video_preview_player.dart';
 import '../../../work_order/data/dto/media_file_dto.dart';
 import '../cubit/media_gallery_cubit.dart';
 import '../cubit/media_gallery_state.dart';
@@ -58,7 +57,7 @@ class MediaGalleryView extends StatelessWidget {
         child: SizedBox(
           width: 640,
           height: 400,
-          child: _VideoPlayerView(url: url),
+          child: VideoPreviewPlayer(url: url),
         ),
       ),
     );
@@ -205,38 +204,5 @@ class _MediaTile extends StatelessWidget {
           ),
       ],
     );
-  }
-}
-
-class _VideoPlayerView extends StatefulWidget {
-  const _VideoPlayerView({required this.url});
-
-  final String url;
-
-  @override
-  State<_VideoPlayerView> createState() => _VideoPlayerViewState();
-}
-
-class _VideoPlayerViewState extends State<_VideoPlayerView> {
-  late final Player _player;
-  late final VideoController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _player = Player();
-    _controller = VideoController(_player);
-    _player.open(Media(widget.url));
-  }
-
-  @override
-  void dispose() {
-    _player.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Video(controller: _controller);
   }
 }

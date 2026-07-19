@@ -4,7 +4,10 @@
       "Bash(python3 -c ' *)",
       "Bash(flutter test *)",
       "Read(//tmp/**)",
-      "Bash(rm -f /tmp/mk_test.dart; flutter test test/features/media/presentation/widgets/media_gallery_view_test.dart 2>&1 | tail -60)"
+      "Bash(rm -f /tmp/mk_test.dart; flutter test test/features/media/presentation/widgets/media_gallery_view_test.dart 2>&1 | tail -60)",
+      "Bash(grep -n -A 30 \"Future<String?> saveFile\" /Users/semih/.pub-cache/hosted/pub.dev/file_picker-11.0.2/lib/src/file_picker.dart | head -50)",
+      "Read(//Users/semih/.pub-cache/hosted/pub.dev/file_picker-11.0.2/lib/src/**)",
+      "Read(//Users/semih/.pub-cache/hosted/pub.dev/file_picker-11.0.2/lib/src/platform/macos/**)"
     ],
     "additionalDirectories": [
       "/private/tmp"
