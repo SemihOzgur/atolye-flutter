@@ -5,6 +5,7 @@ import '../../features/auth/data/auth_repository.dart';
 import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
+import '../../features/work_order/data/work_order_repository.dart';
 import '../network/dio_client.dart';
 import '../services/diagnostics_logger.dart';
 import '../services/storage_service.dart';
@@ -54,6 +55,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<ICatalogRepository>()) {
     getIt.registerLazySingleton<ICatalogRepository>(
       () => CatalogRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IWorkOrderRepository>()) {
+    getIt.registerLazySingleton<IWorkOrderRepository>(
+      () => WorkOrderRepository(getIt<Dio>()),
     );
   }
 }
