@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
 import '../network/dio_client.dart';
@@ -47,6 +48,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<ICustomerRepository>()) {
     getIt.registerLazySingleton<ICustomerRepository>(
       () => CustomerRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<ICatalogRepository>()) {
+    getIt.registerLazySingleton<ICatalogRepository>(
+      () => CatalogRepository(getIt<Dio>()),
     );
   }
 }
