@@ -7,6 +7,7 @@ import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
 import '../../features/media/data/media_conversion_service.dart';
 import '../../features/media/data/media_repository.dart';
+import '../../features/social_media/data/social_media_repository.dart';
 import '../../features/work_order/data/work_order_repository.dart';
 import '../network/dio_client.dart';
 import '../services/diagnostics_logger.dart';
@@ -75,6 +76,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IMediaConversionService>()) {
     getIt.registerLazySingleton<IMediaConversionService>(
       MediaConversionService.new,
+    );
+  }
+
+  if (!getIt.isRegistered<ISocialMediaRepository>()) {
+    getIt.registerLazySingleton<ISocialMediaRepository>(
+      () => SocialMediaRepository(getIt<Dio>()),
     );
   }
 }
