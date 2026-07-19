@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 
+import '../../features/archive/data/archive_repository.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer/data/customer_repository.dart';
@@ -82,6 +83,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<ISocialMediaRepository>()) {
     getIt.registerLazySingleton<ISocialMediaRepository>(
       () => SocialMediaRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IArchiveRepository>()) {
+    getIt.registerLazySingleton<IArchiveRepository>(
+      () => ArchiveRepository(getIt<Dio>()),
     );
   }
 }
