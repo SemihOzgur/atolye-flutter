@@ -34,7 +34,11 @@ Map<String, dynamic> _sampleWorkOrderJson({String status = 'RECEIVED'}) {
     'existingDamages': null,
     'estimatedDeliveryDate': null,
     'services': [
-      {'servicePriceId': 1, 'serviceName': 'Bakım ve Boya', 'priceSnapshot': 1250.0},
+      {
+        'servicePriceId': 1,
+        'serviceName': 'Bakım ve Boya',
+        'priceSnapshot': 1250.0
+      },
     ],
     'consumables': [
       {
@@ -52,7 +56,7 @@ Map<String, dynamic> _sampleWorkOrderJson({String status = 'RECEIVED'}) {
     'remainingAmount': 1550.0,
     'status': status,
     'socialMediaConsent': false,
-    'trackingUrl': 'https://domain.com/t/abc123',
+    'trackingUrl': 'https://dotikadbm.com/t/abc123',
     'deliveredAt': null,
     'finalPaymentAmount': null,
     'media': const <dynamic>[],
@@ -77,7 +81,7 @@ void main() {
   late WorkOrderRepository repository;
 
   setUp(() {
-    dio = Dio(BaseOptions(baseUrl: 'https://domain.com'));
+    dio = Dio(BaseOptions(baseUrl: 'https://dotikadbm.com'));
     repository = WorkOrderRepository(dio);
   });
 
@@ -190,7 +194,8 @@ void main() {
     expect(workOrder.id, 1);
   });
 
-  test('update throws ApiException with 409 on stale concurrency token', () async {
+  test('update throws ApiException with 409 on stale concurrency token',
+      () async {
     dio.httpClientAdapter = _FakeAdapter(
       statusCode: 409,
       body: {
@@ -208,7 +213,8 @@ void main() {
           updatedAt: DateTime.parse('2026-01-01T10:00:00Z'),
         ),
       ),
-      throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409)),
+      throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409)),
     );
   });
 
@@ -226,7 +232,8 @@ void main() {
     expect(workOrder.status, 'IN_PROGRESS');
   });
 
-  test('updateStatus throws ApiException with INVALID_STATUS_TRANSITION', () async {
+  test('updateStatus throws ApiException with INVALID_STATUS_TRANSITION',
+      () async {
     dio.httpClientAdapter = _FakeAdapter(
       statusCode: 409,
       body: {

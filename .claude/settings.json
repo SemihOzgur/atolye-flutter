@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(flutter test *)",
+      "Read(//tmp/**)",
+      "Bash(rm -f /tmp/mk_test.dart; flutter test test/features/media/presentation/widgets/media_gallery_view_test.dart 2>&1 | tail -60)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
+    ]
+  }
+}

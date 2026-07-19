@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:leather_care_admin/core/services/storage_service.dart';
 import 'package:leather_care_admin/core/services/window_guard_service.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'app/app.dart';
@@ -14,6 +15,7 @@ import 'core/theme/app_dimensions.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
 
   await setupLocator();
 

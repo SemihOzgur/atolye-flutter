@@ -5,6 +5,8 @@ import '../../features/auth/data/auth_repository.dart';
 import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
+import '../../features/media/data/media_conversion_service.dart';
+import '../../features/media/data/media_repository.dart';
 import '../../features/work_order/data/work_order_repository.dart';
 import '../network/dio_client.dart';
 import '../services/diagnostics_logger.dart';
@@ -61,6 +63,18 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IWorkOrderRepository>()) {
     getIt.registerLazySingleton<IWorkOrderRepository>(
       () => WorkOrderRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IMediaRepository>()) {
+    getIt.registerLazySingleton<IMediaRepository>(
+      () => MediaRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IMediaConversionService>()) {
+    getIt.registerLazySingleton<IMediaConversionService>(
+      MediaConversionService.new,
     );
   }
 }

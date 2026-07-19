@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../media/presentation/widgets/media_section.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_detail_cubit.dart';
 import '../cubit/work_order_detail_state.dart';
@@ -375,6 +376,12 @@ class _WorkOrderDetailView extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+
+              MediaSection(
+                workOrderId: workOrder.id,
+                isOrderOpen: isOpen,
               ),
               const SizedBox(height: AppDimensions.spaceM),
 
