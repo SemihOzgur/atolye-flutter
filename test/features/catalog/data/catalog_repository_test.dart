@@ -16,7 +16,7 @@ void main() {
   late CatalogRepository repository;
 
   setUp(() {
-    dio = Dio(BaseOptions(baseUrl: 'https://domain.com'));
+    dio = Dio(BaseOptions(baseUrl: 'https://dotikadbm.com'));
     repository = CatalogRepository(dio);
   });
 
@@ -78,7 +78,9 @@ void main() {
     expect(category.level, 2);
   });
 
-  test('createCategory throws ApiException with INVALID_CATEGORY_LEVEL-like 400', () async {
+  test(
+      'createCategory throws ApiException with INVALID_CATEGORY_LEVEL-like 400',
+      () async {
     dio.httpClientAdapter = _FakeAdapter(
       statusCode: 400,
       body: {
@@ -91,7 +93,8 @@ void main() {
       () => repository.createCategory(
         const CreateCategoryRequestDto(parentId: 3, name: 'X', sortOrder: 0),
       ),
-      throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 400)),
+      throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 400)),
     );
   });
 
@@ -185,7 +188,8 @@ void main() {
     expect(products.single.displayName, 'Saphir Deri Bakım Kremi');
   });
 
-  test('createConsumableGroup throws ApiException on 409 unique conflict', () async {
+  test('createConsumableGroup throws ApiException on 409 unique conflict',
+      () async {
     dio.httpClientAdapter = _FakeAdapter(
       statusCode: 409,
       body: {'title': 'Conflict', 'detail': 'Bu ad zaten mevcut.'},
@@ -195,7 +199,8 @@ void main() {
       () => repository.createConsumableGroup(
         const CreateConsumableGroupRequestDto(name: 'Bakım Ürünleri'),
       ),
-      throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409)),
+      throwsA(
+          isA<ApiException>().having((e) => e.statusCode, 'statusCode', 409)),
     );
   });
 }

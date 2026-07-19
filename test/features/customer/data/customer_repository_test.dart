@@ -15,7 +15,7 @@ void main() {
   late CustomerRepository repository;
 
   setUp(() {
-    dio = Dio(BaseOptions(baseUrl: 'https://domain.com'));
+    dio = Dio(BaseOptions(baseUrl: 'https://dotikadbm.com'));
     repository = CustomerRepository(dio);
   });
 
@@ -78,7 +78,8 @@ void main() {
 
     expect(result.isDuplicate, isFalse);
     expect(result.response.customer.id, 5);
-    expect(result.response.iysCodeExpiresAt, DateTime.parse('2026-07-01T10:05:00Z'));
+    expect(result.response.iysCodeExpiresAt,
+        DateTime.parse('2026-07-01T10:05:00Z'));
   });
 
   test('create returns duplicate result on 409 DUPLICATE_PHONE', () async {

@@ -79,7 +79,7 @@ void main() {
       remainingAmount: 1550,
       status: 'RECEIVED',
       socialMediaConsent: false,
-      trackingUrl: 'https://domain.com/t/abc',
+      trackingUrl: 'https://dotikadbm.com/t/abc',
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 1, 1),
     );
@@ -143,7 +143,7 @@ void main() {
       remainingAmount: 1600,
       status: 'RECEIVED',
       socialMediaConsent: false,
-      trackingUrl: 'https://domain.com/t/abc',
+      trackingUrl: 'https://dotikadbm.com/t/abc',
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 1, 2),
     );
@@ -160,7 +160,8 @@ void main() {
     expect(result!.price, 1600);
   });
 
-  test('submitUpdate surfaces 409 as failure for stale concurrency token', () async {
+  test('submitUpdate surfaces 409 as failure for stale concurrency token',
+      () async {
     workOrderRepository.exceptionToThrow = ApiException(
       message: 'Conflict',
       detail: 'Kayıt başka yerden güncellendi.',

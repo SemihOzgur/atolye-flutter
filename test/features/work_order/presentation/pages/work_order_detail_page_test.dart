@@ -6,10 +6,14 @@ import 'package:leather_care_admin/core/di/injection.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
 import 'package:leather_care_admin/core/theme/app_theme.dart';
 import 'package:leather_care_admin/features/customer/data/dto/customer_dto.dart';
+import 'package:leather_care_admin/features/media/data/media_conversion_service.dart';
+import 'package:leather_care_admin/features/media/data/media_repository.dart';
 import 'package:leather_care_admin/features/work_order/data/dto/work_order_dto.dart';
 import 'package:leather_care_admin/features/work_order/data/work_order_repository.dart';
 import 'package:leather_care_admin/features/work_order/presentation/pages/work_order_detail_page.dart';
 
+import '../../../media/fakes/fake_media_conversion_service.dart';
+import '../../../media/fakes/fake_media_repository.dart';
 import '../../fakes/fake_work_order_repository.dart';
 
 void main() {
@@ -21,6 +25,18 @@ void main() {
       getIt.unregister<IWorkOrderRepository>();
     }
     getIt.registerLazySingleton<IWorkOrderRepository>(() => fakeRepository);
+
+    if (getIt.isRegistered<IMediaRepository>()) {
+      getIt.unregister<IMediaRepository>();
+    }
+    getIt.registerLazySingleton<IMediaRepository>(FakeMediaRepository.new);
+
+    if (getIt.isRegistered<IMediaConversionService>()) {
+      getIt.unregister<IMediaConversionService>();
+    }
+    getIt.registerLazySingleton<IMediaConversionService>(
+      FakeMediaConversionService.new,
+    );
   });
 
   tearDown(() async {
@@ -48,7 +64,7 @@ void main() {
       remainingAmount: 1550,
       status: status,
       socialMediaConsent: false,
-      trackingUrl: 'https://domain.com/t/abc',
+      trackingUrl: 'https://dotikadbm.com/t/abc',
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 1, 1),
     );
@@ -97,7 +113,9 @@ void main() {
     await tester.pumpAndSettle();
 
     fakeRepository.workOrderToReturn = buildWorkOrder(status: 'IN_PROGRESS');
-    await tester.tap(find.text('İşleme Al'));
+    final actionFinder = find.text('İşleme Al');
+    await tester.ensureVisible(actionFinder);
+    await tester.tap(actionFinder);
     await tester.pumpAndSettle();
 
     expect(fakeRepository.lastStatusRequest!.newStatus, 'IN_PROGRESS');
@@ -112,13 +130,17 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Teslim Et'));
+    final deliverFinder = find.text('Teslim Et');
+    await tester.ensureVisible(deliverFinder);
+    await tester.tap(deliverFinder);
     await tester.pumpAndSettle();
 
     expect(find.text('Kalan tutar: 1.550,00 ₺'), findsOneWidget);
 
     fakeRepository.workOrderToReturn = buildWorkOrder(status: 'DELIVERED');
-    await tester.tap(find.widgetWithText(TextButton, 'Teslim Et'));
+    final confirmDeliverFinder = find.widgetWithText(TextButton, 'Teslim Et');
+    await tester.ensureVisible(confirmDeliverFinder);
+    await tester.tap(confirmDeliverFinder);
     await tester.pumpAndSettle();
 
     expect(fakeRepository.lastDeliverRequest!.finalPaymentAmount, 1550);
@@ -142,7 +164,9 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('İptal Et'));
+    final cancelFinder = find.text('İptal Et');
+    await tester.ensureVisible(cancelFinder);
+    await tester.tap(cancelFinder);
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -173,7 +197,9 @@ void main() {
       statusCode: 409,
     );
 
-    await tester.tap(find.text('İşleme Al'));
+    final actionFinder = find.text('İşleme Al');
+    await tester.ensureVisible(actionFinder);
+    await tester.tap(actionFinder);
     await tester.pumpAndSettle();
 
     expect(

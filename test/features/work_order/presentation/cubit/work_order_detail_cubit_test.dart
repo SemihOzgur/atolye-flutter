@@ -40,7 +40,7 @@ void main() {
       remainingAmount: 1550,
       status: status,
       socialMediaConsent: false,
-      trackingUrl: 'https://domain.com/t/abc',
+      trackingUrl: 'https://dotikadbm.com/t/abc',
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 1, 1),
     );
@@ -68,7 +68,8 @@ void main() {
     expect(cubit.state.errorMessage, 'İş emri bulunamadı.');
   });
 
-  test('updateStatus success replaces work order with server response', () async {
+  test('updateStatus success replaces work order with server response',
+      () async {
     repository.workOrderToReturn = buildWorkOrder(status: 'IN_PROGRESS');
 
     final error = await cubit.updateStatus('IN_PROGRESS');
