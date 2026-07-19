@@ -14,4 +14,11 @@ void main() {
       '100.0 GB',
     );
   });
+
+  test('format picks the largest fitting unit', () {
+    expect(ByteSizeFormatter.format(512), '512 B');
+    expect(ByteSizeFormatter.format(2048), '2.0 KB');
+    expect(ByteSizeFormatter.format(5 * 1024 * 1024), '5.0 MB');
+    expect(ByteSizeFormatter.format(2 * 1024 * 1024 * 1024), '2.0 GB');
+  });
 }
