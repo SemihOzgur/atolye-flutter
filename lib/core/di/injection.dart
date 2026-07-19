@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/archive/data/archive_repository.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/backup/data/backup_repository.dart';
 import '../../features/catalog/data/catalog_repository.dart';
 import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
@@ -89,6 +90,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IArchiveRepository>()) {
     getIt.registerLazySingleton<IArchiveRepository>(
       () => ArchiveRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IBackupRepository>()) {
+    getIt.registerLazySingleton<IBackupRepository>(
+      () => BackupRepository(getIt<Dio>()),
     );
   }
 }

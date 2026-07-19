@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/byte_size_formatter.dart';
+import '../../../backup/presentation/widgets/backup_section.dart';
 import '../../data/archive_integrity_checker.dart';
 import '../../data/archive_repository.dart';
 import '../../data/dto/archive_candidate_dto.dart';
@@ -95,76 +96,81 @@ class _ArchiveViewState extends State<_ArchiveView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Arşiv & Yedek', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: AppDimensions.spaceM),
-        const Text(
-          'Arşiv indirildikten sonra bu dosyaların tek kopyası şirket '
-          'bilgisayarındadır. Harici disk / ikinci kopya önerilir.',
-          style: TextStyle(color: AppColors.textMuted),
-        ),
-        const SizedBox(height: AppDimensions.spaceL),
-        Row(
-          children: [
-            SizedBox(
-              width: 180,
-              child: TextField(
-                controller: _daysController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Gün eşiği (olderThanDays)',
-                ),
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spaceM),
-            ElevatedButton(
-              onPressed: () {
-                final days = int.tryParse(_daysController.text) ?? 90;
-                context.read<ArchiveCubit>().loadCandidates(
-                      olderThanDays: days,
-                    );
-              },
-              child: const Text('Adayları Listele'),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppDimensions.spaceM),
-        BlocBuilder<ArchiveCubit, ArchiveState>(
-          builder: (context, state) {
-            return Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _pickTargetFolder(context),
-                  icon: const Icon(Icons.folder_open_rounded),
-                  label: Text(
-                    state.targetRootPath == null
-                        ? 'Hedef Klasör Seç'
-                        : 'Klasör: ${state.targetRootPath}',
-                    overflow: TextOverflow.ellipsis,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Arşiv & Yedek',
+              style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: AppDimensions.spaceM),
+          const Text(
+            'Arşiv indirildikten sonra bu dosyaların tek kopyası şirket '
+            'bilgisayarındadır. Harici disk / ikinci kopya önerilir.',
+            style: TextStyle(color: AppColors.textMuted),
+          ),
+          const SizedBox(height: AppDimensions.spaceL),
+          const BackupSection(),
+          const SizedBox(height: AppDimensions.spaceL),
+          Text('Medya Arşivi', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: AppDimensions.spaceM),
+          Row(
+            children: [
+              SizedBox(
+                width: 180,
+                child: TextField(
+                  controller: _daysController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Gün eşiği (olderThanDays)',
                   ),
                 ),
-                const SizedBox(width: AppDimensions.spaceM),
-                ElevatedButton(
-                  onPressed: state.canArchive
-                      ? () => _confirmAndArchive(context, state)
-                      : null,
-                  child: state.isArchiving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Arşivle'),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: AppDimensions.spaceL),
-        Expanded(
-          child: BlocBuilder<ArchiveCubit, ArchiveState>(
+              ),
+              const SizedBox(width: AppDimensions.spaceM),
+              ElevatedButton(
+                onPressed: () {
+                  final days = int.tryParse(_daysController.text) ?? 90;
+                  context.read<ArchiveCubit>().loadCandidates(
+                        olderThanDays: days,
+                      );
+                },
+                child: const Text('Adayları Listele'),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spaceM),
+          BlocBuilder<ArchiveCubit, ArchiveState>(
+            builder: (context, state) {
+              return Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _pickTargetFolder(context),
+                    icon: const Icon(Icons.folder_open_rounded),
+                    label: Text(
+                      state.targetRootPath == null
+                          ? 'Hedef Klasör Seç'
+                          : 'Klasör: ${state.targetRootPath}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: AppDimensions.spaceM),
+                  ElevatedButton(
+                    onPressed: state.canArchive
+                        ? () => _confirmAndArchive(context, state)
+                        : null,
+                    child: state.isArchiving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Arşivle'),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppDimensions.spaceL),
+          BlocBuilder<ArchiveCubit, ArchiveState>(
             builder: (context, state) {
               if (state.listStatus == ArchiveListStatus.error) {
                 return Center(
@@ -196,7 +202,8 @@ class _ArchiveViewState extends State<_ArchiveView> {
                 );
               }
 
-              return ListView(
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ...state.candidates.map(
                     (candidate) => _CandidateRow(
@@ -223,8 +230,8 @@ class _ArchiveViewState extends State<_ArchiveView> {
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -6,7 +6,6 @@ import 'package:leather_care_admin/core/services/storage_service.dart';
 import 'package:leather_care_admin/core/services/window_guard_service.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
-
 import 'app/app.dart';
 import 'core/di/injection.dart';
 import 'core/services/diagnostics_logger.dart';
