@@ -8,7 +8,9 @@ import 'package:leather_care_admin/features/archive/data/archive_repository.dart
 import 'package:leather_care_admin/features/archive/data/dto/archive_candidate_dto.dart';
 import 'package:leather_care_admin/features/archive/presentation/cubit/archive_cubit.dart';
 import 'package:leather_care_admin/features/archive/presentation/pages/archive_page.dart';
+import 'package:leather_care_admin/features/backup/data/backup_repository.dart';
 
+import '../../../backup/fakes/fake_backup_repository.dart';
 import '../../fakes/fake_archive_repository.dart';
 
 void main() {
@@ -20,6 +22,11 @@ void main() {
       getIt.unregister<IArchiveRepository>();
     }
     getIt.registerLazySingleton<IArchiveRepository>(() => repository);
+
+    if (getIt.isRegistered<IBackupRepository>()) {
+      getIt.unregister<IBackupRepository>();
+    }
+    getIt.registerLazySingleton<IBackupRepository>(FakeBackupRepository.new);
   });
 
   tearDown(() async {
