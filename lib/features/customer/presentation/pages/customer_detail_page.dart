@@ -8,6 +8,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/skeleton_box.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/customer_repository.dart';
 import '../cubit/customer_detail_cubit.dart';
 import '../cubit/customer_detail_state.dart';
@@ -46,7 +48,7 @@ class _CustomerDetailViewState extends State<_CustomerDetailView> {
     return BlocBuilder<CustomerDetailCubit, CustomerDetailState>(
       builder: (context, state) {
         if (state.status == CustomerDetailStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _CustomerDetailSkeleton();
         }
 
         if (state.status == CustomerDetailStatus.error) {
@@ -190,6 +192,42 @@ class _CustomerDetailViewState extends State<_CustomerDetailView> {
           ),
         );
       },
+    );
+  }
+}
+
+class _CustomerDetailSkeleton extends StatelessWidget {
+  const _CustomerDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.spaceL),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBox(width: 220, height: 24),
+                  const SizedBox(height: AppDimensions.spaceM),
+                  const SkeletonBox(width: 160, height: 14),
+                  const SizedBox(height: AppDimensions.spaceXs),
+                  const SkeletonBox(width: 200, height: 14),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spaceL),
+          const SkeletonBox(width: 180, height: 20),
+          const SizedBox(height: AppDimensions.spaceM),
+          const Card(
+            child: SkeletonList(count: 3),
+          ),
+        ],
+      ),
     );
   }
 }

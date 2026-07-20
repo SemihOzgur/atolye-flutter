@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
 import 'package:leather_care_admin/core/theme/app_theme.dart';
+import 'package:leather_care_admin/core/widgets/skeleton_box.dart';
 import 'package:leather_care_admin/features/media/presentation/cubit/media_gallery_cubit.dart';
 import 'package:leather_care_admin/features/media/presentation/widgets/media_gallery_view.dart';
 import 'package:leather_care_admin/features/work_order/data/dto/media_file_dto.dart';
@@ -44,12 +45,12 @@ void main() {
     );
   }
 
-  testWidgets('shows a loading indicator before the first load resolves', (
+  testWidgets('shows a skeleton loader before the first load resolves', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(SkeletonBox), findsWidgets);
   });
 
   testWidgets('shows the error message and a retry button on failure', (

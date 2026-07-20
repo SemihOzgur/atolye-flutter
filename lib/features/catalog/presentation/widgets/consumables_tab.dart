@@ -5,6 +5,7 @@ import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/dto/consumable_group_dto.dart';
 import '../../data/dto/consumable_product_dto.dart';
 import '../../data/dto/create_consumable_group_request_dto.dart';
@@ -231,7 +232,7 @@ class ConsumablesTab extends StatelessWidget {
         }
 
         if (state.status == ConsumableStatus.loading && state.groups.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const SkeletonList();
         }
 
         return Column(

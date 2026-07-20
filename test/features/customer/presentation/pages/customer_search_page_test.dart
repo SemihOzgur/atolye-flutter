@@ -53,11 +53,30 @@ void main() {
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
-  testWidgets('shows prompt before any search', (tester) async {
+  testWidgets('loads all customers immediately without typing a search', (
+    tester,
+  ) async {
+    fakeRepository.pageToReturn = PagedResponse(
+      items: [
+        CustomerDto(
+          id: 7,
+          firstName: 'Ayşe',
+          lastName: 'Yılmaz',
+          phone: '+905321234567',
+          iysConsentStatus: 'APPROVED',
+          createdAt: DateTime(2026, 1, 1),
+        ),
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    );
+
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    expect(find.text('Aramak için telefon veya isim yazın.'), findsOneWidget);
+    expect(find.text('Ayşe Yılmaz'), findsOneWidget);
+    expect(fakeRepository.lastSearchRequested, isNull);
   });
 
   testWidgets('navigates to new customer page on Yeni Kayıt tap', (
@@ -66,7 +85,7 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Yeni Kayıt'));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Yeni Kayıt'));
     await tester.pumpAndSettle();
 
     expect(find.text('new-customer-page'), findsOneWidget);

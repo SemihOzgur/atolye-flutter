@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/dto/create_service_type_request_dto.dart';
 import '../../data/dto/service_type_dto.dart';
 import '../../data/dto/update_service_type_request_dto.dart';
@@ -135,7 +136,7 @@ class ServiceTypesTab extends StatelessWidget {
               }
               if (state.status == ServiceTypeStatus.loading &&
                   state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const SkeletonList();
               }
               return ListView.separated(
                 itemCount: state.items.length,

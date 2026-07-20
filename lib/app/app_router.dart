@@ -44,11 +44,13 @@ GoRouter buildAppRouter(
         routes: [
           GoRoute(
             path: AppRoutes.dashboard,
-            builder: (context, state) => const DashboardPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardPage()),
           ),
           GoRoute(
             path: AppRoutes.customers,
-            builder: (context, state) => const CustomerSearchPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CustomerSearchPage()),
             routes: [
               GoRoute(
                 path: 'new',
@@ -64,7 +66,8 @@ GoRouter buildAppRouter(
           ),
           GoRoute(
             path: AppRoutes.workOrders,
-            builder: (context, state) => const WorkOrderListPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: WorkOrderListPage()),
             routes: [
               GoRoute(
                 path: 'new',
@@ -84,15 +87,18 @@ GoRouter buildAppRouter(
           ),
           GoRoute(
             path: AppRoutes.catalog,
-            builder: (context, state) => const CatalogPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CatalogPage()),
           ),
           GoRoute(
             path: AppRoutes.socialMedia,
-            builder: (context, state) => const SocialMediaPage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SocialMediaPage()),
           ),
           GoRoute(
             path: AppRoutes.archive,
-            builder: (context, state) => const ArchivePage(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ArchivePage()),
           ),
         ],
       ),

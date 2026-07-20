@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/byte_size_formatter.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../../backup/presentation/widgets/backup_section.dart';
 import '../../data/archive_integrity_checker.dart';
 import '../../data/archive_repository.dart';
@@ -193,7 +194,7 @@ class _ArchiveViewState extends State<_ArchiveView> {
               }
 
               if (state.listStatus == ArchiveListStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const SkeletonList(count: 4);
               }
 
               if (state.candidates.isEmpty) {

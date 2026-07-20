@@ -8,6 +8,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/customer_repository.dart';
 import '../cubit/customer_search_cubit.dart';
 import '../cubit/customer_search_state.dart';
@@ -19,7 +20,8 @@ class CustomerSearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CustomerSearchCubit>(
-      create: (_) => CustomerSearchCubit(getIt<ICustomerRepository>()),
+      create: (_) =>
+          CustomerSearchCubit(getIt<ICustomerRepository>())..search(''),
       child: const _CustomerSearchView(),
     );
   }
@@ -88,15 +90,9 @@ class _CustomerSearchViewState extends State<_CustomerSearchView> {
                 );
               }
 
-              if (!state.hasSearched && state.items.isEmpty) {
-                return const Center(
-                  child: Text('Aramak için telefon veya isim yazın.'),
-                );
-              }
-
               if (state.status == CustomerSearchStatus.loading &&
                   state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const SkeletonList();
               }
 
               if (state.items.isEmpty) {
