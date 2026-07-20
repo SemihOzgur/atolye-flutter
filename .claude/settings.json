@@ -12,7 +12,8 @@
       "Bash(grep -rn \"class NoTransitionPage\" /Users/semih/.pub-cache/hosted/pub.dev/go_router-*/lib/ 2>/dev/null | head -5 *)",
       "Read(//Users/semih/.pub-cache/hosted/pub.dev/**)",
       "Bash(grep -n -B2 -A15 \"### \\\\`GET /api/customers\\\\`\" /Users/semih/AtolyeProje/atolye_flutter/docs/flutter-gelistirici-dokumantasyonu.md)",
-      "Bash(grep -n \"api/customers\\\\`\" /Users/semih/AtolyeProje/atolye_flutter/docs/flutter-gelistirici-dokumantasyonu.md)"
+      "Bash(grep -n \"api/customers\\\\`\" /Users/semih/AtolyeProje/atolye_flutter/docs/flutter-gelistirici-dokumantasyonu.md)",
+      "Bash(echo \"---exit $?---\")"
     ],
     "additionalDirectories": [
       "/private/tmp"
