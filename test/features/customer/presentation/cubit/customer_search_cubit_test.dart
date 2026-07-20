@@ -41,21 +41,21 @@ void main() {
 
     expect(cubit.state.status, CustomerSearchStatus.loaded);
     expect(cubit.state.items, [customer]);
-    expect(cubit.state.hasSearched, isTrue);
   });
 
-  test('empty query still marks hasSearched false and shows empty state', () async {
-    repository.pageToReturn = const PagedResponse(
-      items: <CustomerDto>[],
+  test('empty query loads all customers (search param omitted)', () async {
+    repository.pageToReturn = PagedResponse(
+      items: [customer],
       page: 1,
       pageSize: 20,
-      totalCount: 0,
+      totalCount: 1,
     );
 
     await cubit.search('');
 
-    expect(cubit.state.hasSearched, isFalse);
-    expect(cubit.state.items, isEmpty);
+    expect(cubit.state.status, CustomerSearchStatus.loaded);
+    expect(cubit.state.items, [customer]);
+    expect(repository.lastSearchRequested, isNull);
   });
 
   test('emits error state on failure', () async {

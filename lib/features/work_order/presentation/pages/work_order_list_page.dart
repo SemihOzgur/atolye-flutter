@@ -10,6 +10,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_list_cubit.dart';
 import '../cubit/work_order_list_state.dart';
@@ -114,7 +115,7 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
 
               if (state.status == WorkOrderListStatus.loading &&
                   state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const SkeletonList();
               }
 
               if (state.items.isEmpty) {

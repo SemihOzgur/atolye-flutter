@@ -7,6 +7,7 @@ import '../../../../app/app_routes.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/video_preview_player.dart';
 import '../../../work_order/data/dto/media_file_dto.dart';
 import '../../data/dto/social_media_item_dto.dart';
@@ -62,7 +63,7 @@ class _SocialMediaView extends StatelessWidget {
 
               if (state.status == SocialMediaStatus.loading &&
                   state.items.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
+                return const _SocialMediaCardSkeletonList();
               }
 
               if (state.items.isEmpty) {
@@ -114,6 +115,48 @@ class _SocialMediaView extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SocialMediaCardSkeletonList extends StatelessWidget {
+  const _SocialMediaCardSkeletonList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: 3,
+      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.spaceM),
+      itemBuilder: (context, index) => const _SocialMediaCardSkeleton(),
+    );
+  }
+}
+
+class _SocialMediaCardSkeleton extends StatelessWidget {
+  const _SocialMediaCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spaceL),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SkeletonBox(width: 160, height: 20),
+            const SizedBox(height: AppDimensions.spaceXs),
+            const SkeletonBox(width: 220, height: 14),
+            const SizedBox(height: AppDimensions.spaceM),
+            const SkeletonBox(width: 60, height: 12),
+            const SizedBox(height: AppDimensions.spaceXxs),
+            const SkeletonBox(height: 88, borderRadius: 8),
+            const SizedBox(height: AppDimensions.spaceS),
+            const SkeletonBox(width: 60, height: 12),
+            const SizedBox(height: AppDimensions.spaceXxs),
+            const SkeletonBox(height: 88, borderRadius: 8),
+          ],
+        ),
+      ),
     );
   }
 }

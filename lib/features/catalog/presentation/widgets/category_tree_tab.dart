@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/dto/category_tree_dto.dart';
 import '../../data/dto/create_category_request_dto.dart';
 import '../../data/dto/update_category_request_dto.dart';
@@ -217,7 +218,7 @@ class _CategoryTreeTabState extends State<CategoryTreeTab> {
               )
             else if (state.status == CategoryTreeStatus.loading &&
                 state.tree.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const SkeletonList()
             else
               Expanded(
                 child: ListView(

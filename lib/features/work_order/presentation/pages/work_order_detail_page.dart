@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/skeleton_box.dart';
 import '../../../media/presentation/widgets/media_section.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_detail_cubit.dart';
@@ -172,7 +173,7 @@ class _WorkOrderDetailView extends StatelessWidget {
     return BlocBuilder<WorkOrderDetailCubit, WorkOrderDetailState>(
       builder: (context, state) {
         if (state.status == WorkOrderDetailStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _WorkOrderDetailSkeleton();
         }
 
         if (state.status == WorkOrderDetailStatus.error) {
@@ -514,6 +515,62 @@ class _WorkOrderDetailView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _WorkOrderDetailSkeleton extends StatelessWidget {
+  const _WorkOrderDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const SkeletonBox(width: 180, height: 28),
+              const SizedBox(width: AppDimensions.spaceM),
+              const SkeletonBox(width: 90, height: 24, borderRadius: 12),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spaceS),
+          const SkeletonBox(width: 220, height: 14),
+          const SizedBox(height: AppDimensions.spaceL),
+          const _SkeletonCardBlock(height: 90),
+          const SizedBox(height: AppDimensions.spaceM),
+          const _SkeletonCardBlock(height: 130),
+          const SizedBox(height: AppDimensions.spaceM),
+          const _SkeletonCardBlock(height: 150),
+          const SizedBox(height: AppDimensions.spaceM),
+          const _SkeletonCardBlock(height: 130),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonCardBlock extends StatelessWidget {
+  const _SkeletonCardBlock({required this.height});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spaceL),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SkeletonBox(width: 160, height: 18),
+            const SizedBox(height: AppDimensions.spaceM),
+            SkeletonBox(height: height, borderRadius: 8),
+          ],
+        ),
+      ),
     );
   }
 }

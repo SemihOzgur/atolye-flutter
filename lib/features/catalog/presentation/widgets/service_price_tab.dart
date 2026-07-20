@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_list_tile.dart';
 import '../../data/dto/category_tree_dto.dart';
 import '../cubit/category_cubit.dart';
 import '../cubit/category_state.dart';
@@ -93,7 +94,7 @@ class ServicePriceTab extends StatelessWidget {
                   }
 
                   if (priceState.status == ServicePriceStatus.loading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const SkeletonList();
                   }
 
                   return Column(

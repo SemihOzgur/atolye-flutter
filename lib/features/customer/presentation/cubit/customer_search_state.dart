@@ -21,8 +21,6 @@ class CustomerSearchState {
   final int totalCount;
   final String? errorMessage;
 
-  bool get hasSearched => query.isNotEmpty;
-
   bool get hasNextPage => page * pageSize < totalCount;
 
   bool get hasPreviousPage => page > 1;

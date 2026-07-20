@@ -10,6 +10,7 @@ import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/byte_size_formatter.dart';
 import '../../../../core/utils/currency_formatter.dart';
+import '../../../../core/widgets/skeleton_box.dart';
 import '../../data/dashboard_repository.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
@@ -43,7 +44,7 @@ class _DashboardView extends StatelessWidget {
               onRetry: () => context.read<DashboardCubit>().load(),
             );
           }
-          return const Center(child: CircularProgressIndicator());
+          return const _DashboardSkeleton();
         }
 
         return SingleChildScrollView(
@@ -129,6 +130,76 @@ class _DashboardView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppDimensions.spaceM,
+          runSpacing: AppDimensions.spaceM,
+          children: List.generate(7, (_) => const _SummaryCardSkeleton()),
+        ),
+        const SizedBox(height: AppDimensions.spaceL),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.spaceM),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: AppDecorations.borderRadiusXl,
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              const SkeletonBox(width: 24, height: 24, borderRadius: 12),
+              const SizedBox(width: AppDimensions.spaceM),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SkeletonBox(width: 100, height: 14),
+                    const SizedBox(height: AppDimensions.spaceXs),
+                    const SkeletonBox(width: 140, height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryCardSkeleton extends StatelessWidget {
+  const _SummaryCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.all(AppDimensions.spaceL),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppDecorations.borderRadiusXl,
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SkeletonBox(width: 90, height: 14),
+          SizedBox(height: AppDimensions.spaceXs),
+          SkeletonBox(width: 60, height: 24),
+        ],
+      ),
     );
   }
 }

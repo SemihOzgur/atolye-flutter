@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/widgets/skeleton_box.dart';
 import '../../../../core/widgets/video_preview_player.dart';
 import '../../../work_order/data/dto/media_file_dto.dart';
 import '../cubit/media_gallery_cubit.dart';
@@ -84,7 +85,7 @@ class MediaGalleryView extends StatelessWidget {
         }
 
         if (state.status == MediaGalleryStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
+          return const _MediaGridSkeleton();
         }
 
         return DefaultTabController(
@@ -138,6 +139,28 @@ class MediaGalleryView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _MediaGridSkeleton extends StatelessWidget {
+  const _MediaGridSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 220,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(AppDimensions.spaceS),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          mainAxisSpacing: AppDimensions.spaceS,
+          crossAxisSpacing: AppDimensions.spaceS,
+        ),
+        itemCount: 8,
+        itemBuilder: (context, index) =>
+            const SkeletonBox(height: double.infinity, borderRadius: 8),
+      ),
     );
   }
 }

@@ -9,7 +9,12 @@ import 'package:leather_care_admin/features/customer/data/dto/iys_resend_code_re
 import 'package:leather_care_admin/features/customer/data/dto/update_customer_request_dto.dart';
 
 class FakeCustomerRepository implements ICustomerRepository {
-  PagedResponse<CustomerDto>? pageToReturn;
+  PagedResponse<CustomerDto> pageToReturn = const PagedResponse(
+    items: <CustomerDto>[],
+    page: 1,
+    pageSize: 20,
+    totalCount: 0,
+  );
   CustomerCreateResult? createResultToReturn;
   CustomerDetailDto? detailToReturn;
   CustomerDto? updateResultToReturn;
@@ -34,7 +39,7 @@ class FakeCustomerRepository implements ICustomerRepository {
     if (exceptionToThrow != null) {
       throw exceptionToThrow!;
     }
-    return pageToReturn!;
+    return pageToReturn;
   }
 
   @override

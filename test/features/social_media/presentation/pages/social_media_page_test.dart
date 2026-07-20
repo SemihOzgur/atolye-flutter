@@ -6,6 +6,7 @@ import 'package:leather_care_admin/core/di/injection.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
 import 'package:leather_care_admin/core/network/paged_response.dart';
 import 'package:leather_care_admin/core/theme/app_theme.dart';
+import 'package:leather_care_admin/core/widgets/skeleton_box.dart';
 import 'package:leather_care_admin/features/social_media/data/dto/social_media_item_dto.dart';
 import 'package:leather_care_admin/features/social_media/data/social_media_repository.dart';
 import 'package:leather_care_admin/features/social_media/presentation/pages/social_media_page.dart';
@@ -74,12 +75,12 @@ void main() {
     return MaterialApp.router(routerConfig: router, theme: AppTheme.light());
   }
 
-  testWidgets('shows a loading indicator before the first load resolves', (
+  testWidgets('shows a skeleton loader before the first load resolves', (
     tester,
   ) async {
     await tester.pumpWidget(buildSubject());
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(SkeletonBox), findsWidgets);
   });
 
   testWidgets('shows the error message and a retry button on failure', (
