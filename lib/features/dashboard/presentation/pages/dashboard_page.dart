@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_dimensions.dart';
-import '../../../../core/utils/byte_size_formatter.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../data/dashboard_repository.dart';
+import '../../data/dto/dashboard_summary_dto.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
+import '../widgets/daily_operations_card.dart';
+import '../widgets/dashboard_header.dart';
+import '../widgets/disk_usage_card.dart';
+import '../widgets/overdue_ready_card.dart';
+import '../widgets/revenue_summary_card.dart';
+import '../widgets/status_distribution_card.dart';
 import '../widgets/summary_card.dart';
+
+const double _wideBreakpoint = 900;
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -31,6 +38,16 @@ class DashboardPage extends StatelessWidget {
 class _DashboardView extends StatelessWidget {
   const _DashboardView();
 
+  bool _isEmpty(DashboardSummaryDto summary) {
+    return summary.receivedCount == 0 &&
+        summary.inProgressCount == 0 &&
+        summary.readyCount == 0 &&
+        summary.receivedTodayCount == 0 &&
+        summary.deliveredTodayCount == 0 &&
+        summary.dailyRevenue == 0 &&
+        summary.monthlyRevenue == 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DashboardCubit, DashboardState>(
@@ -40,91 +57,175 @@ class _DashboardView extends StatelessWidget {
         if (summary == null) {
           if (state.status == DashboardStatus.error) {
             return _ErrorView(
-              message: state.errorMessage ?? 'Panel verileri alınamadı.',
+              message: state.errorMessage ?? 'Dashboard verileri yüklenemedi.',
               onRetry: () => context.read<DashboardCubit>().load(),
             );
           }
           return const _DashboardSkeleton();
         }
 
+        final isRefreshing = state.status == DashboardStatus.loading;
+
         return SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  if (state.lastUpdatedAt != null)
-                    Text(
-                      'Son güncelleme: '
-                      '${DateFormat('HH:mm:ss').format(state.lastUpdatedAt!)}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: state.status == DashboardStatus.loading
-                        ? null
-                        : () => context.read<DashboardCubit>().load(),
-                    tooltip: 'Yenile',
-                    icon: state.status == DashboardStatus.loading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.refresh_rounded),
-                  ),
-                ],
+              DashboardHeader(
+                isRefreshing: isRefreshing,
+                lastUpdatedAt: state.lastUpdatedAt,
+                onRefresh: () => context.read<DashboardCubit>().load(),
               ),
-              const SizedBox(height: AppDimensions.spaceM),
-              Wrap(
-                spacing: AppDimensions.spaceM,
-                runSpacing: AppDimensions.spaceM,
-                children: [
+              if (_isEmpty(summary)) ...[
+                const SizedBox(height: AppDimensions.spaceS),
+                const Text(
+                  'Henüz dashboard verisi bulunmuyor. İlk iş emriniz '
+                  'oluşturulduğunda burada görünmeye başlayacak.',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
+              ],
+              const SizedBox(height: AppDimensions.spaceL),
+              _KpiGroup(
+                title: 'İş Durumu',
+                cards: [
                   SummaryCard(
                     label: 'Teslim Alınan',
-                    value: '${summary.receivedCount}',
+                    count: summary.receivedCount,
+                    icon: Icons.inventory_2_outlined,
+                    description: 'Toplam açık iş',
+                    accentColor: AppColors.textMuted,
                   ),
                   SummaryCard(
                     label: 'İşlemde',
-                    value: '${summary.inProgressCount}',
+                    count: summary.inProgressCount,
+                    icon: Icons.settings_outlined,
+                    description: 'Aktif iş emri',
+                    accentColor: AppColors.primary,
                   ),
                   SummaryCard(
                     label: 'Hazır',
-                    value: '${summary.readyCount}',
-                  ),
-                  SummaryCard(
-                    label: 'Bugün Alınan',
-                    value: '${summary.receivedTodayCount}',
-                  ),
-                  SummaryCard(
-                    label: 'Bugün Teslim',
-                    value: '${summary.deliveredTodayCount}',
-                  ),
-                  SummaryCard(
-                    label: 'Günlük Ciro',
-                    value: CurrencyFormatter.format(summary.dailyRevenue),
-                  ),
-                  SummaryCard(
-                    label: 'Aylık Ciro',
-                    value: CurrencyFormatter.format(summary.monthlyRevenue),
+                    count: summary.readyCount,
+                    icon: Icons.check_circle_outline_rounded,
+                    description: 'Teslime hazır',
+                    accentColor: AppColors.warning,
                   ),
                 ],
               ),
               const SizedBox(height: AppDimensions.spaceL),
-              if (state.hasOverdueReadyItems) ...[
-                _AlertCard(
-                  message:
-                      '7+ gündür teslim bekleyen: '
-                      '${summary.readyWaitingOverdueCount}',
-                  onTap: () =>
-                      context.go('${AppRoutes.workOrders}?status=READY'),
-                ),
-                const SizedBox(height: AppDimensions.spaceM),
-              ],
-              _DiskCard(
-                usageLabel: ByteSizeFormatter.formatGb(summary.diskUsageBytes),
-                isWarning: state.isDiskWarning,
-                onArchiveTap: () => context.go(AppRoutes.archive),
+              _KpiGroup(
+                title: 'Bugün',
+                cards: [
+                  SummaryCard(
+                    label: 'Bugün Alınan',
+                    count: summary.receivedTodayCount,
+                    icon: Icons.login_rounded,
+                    description: 'Bugün teslim alınan',
+                    accentColor: AppColors.primary,
+                  ),
+                  SummaryCard(
+                    label: 'Bugün Teslim',
+                    count: summary.deliveredTodayCount,
+                    icon: Icons.logout_rounded,
+                    description: 'Bugün teslim edilen',
+                    accentColor: AppColors.success,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spaceL),
+              _KpiGroup(
+                title: 'Finans',
+                cards: [
+                  SummaryCard(
+                    label: 'Günlük Ciro',
+                    value: CurrencyFormatter.format(summary.dailyRevenue),
+                    icon: Icons.payments_outlined,
+                    description: 'Bugünkü toplam tahsilat',
+                    accentColor: AppColors.success,
+                  ),
+                  SummaryCard(
+                    label: 'Aylık Ciro',
+                    value: CurrencyFormatter.format(summary.monthlyRevenue),
+                    icon: Icons.trending_up_rounded,
+                    description: 'Bu ayki toplam tahsilat',
+                    accentColor: AppColors.success,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spaceL),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final statusCard = StatusDistributionCard(
+                    receivedCount: summary.receivedCount,
+                    inProgressCount: summary.inProgressCount,
+                    readyCount: summary.readyCount,
+                  );
+                  final operationsCard = DailyOperationsCard(
+                    receivedToday: summary.receivedTodayCount,
+                    deliveredToday: summary.deliveredTodayCount,
+                  );
+
+                  if (constraints.maxWidth < _wideBreakpoint) {
+                    return Column(
+                      children: [
+                        statusCard,
+                        const SizedBox(height: AppDimensions.spaceM),
+                        operationsCard,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 3, child: statusCard),
+                      const SizedBox(width: AppDimensions.spaceM),
+                      Expanded(flex: 2, child: operationsCard),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+              RevenueSummaryCard(
+                dailyRevenue: summary.dailyRevenue,
+                monthlyRevenue: summary.monthlyRevenue,
+              ),
+              const SizedBox(height: AppDimensions.spaceM),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final diskCard = DiskUsageCard(
+                    usageBytes: summary.diskUsageBytes,
+                    isWarning: state.isDiskWarning,
+                    onArchiveTap: () => context.go(AppRoutes.archive),
+                  );
+
+                  if (!state.hasOverdueReadyItems) {
+                    return diskCard;
+                  }
+
+                  final overdueCard = OverdueReadyCard(
+                    overdueCount: summary.readyWaitingOverdueCount,
+                    onTap: () =>
+                        context.go('${AppRoutes.workOrders}?status=READY'),
+                  );
+
+                  if (constraints.maxWidth < _wideBreakpoint) {
+                    return Column(
+                      children: [
+                        overdueCard,
+                        const SizedBox(height: AppDimensions.spaceM),
+                        diskCard,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: overdueCard),
+                      const SizedBox(width: AppDimensions.spaceM),
+                      Expanded(child: diskCard),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -134,46 +235,91 @@ class _DashboardView extends StatelessWidget {
   }
 }
 
-class _DashboardSkeleton extends StatelessWidget {
-  const _DashboardSkeleton();
+class _KpiGroup extends StatelessWidget {
+  const _KpiGroup({required this.title, required this.cards});
+
+  final String title;
+  final List<Widget> cards;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: AppDimensions.spaceM,
-          runSpacing: AppDimensions.spaceM,
-          children: List.generate(7, (_) => const _SummaryCardSkeleton()),
-        ),
-        const SizedBox(height: AppDimensions.spaceL),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppDimensions.spaceM),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppDecorations.borderRadiusXl,
-            border: Border.all(color: AppColors.border),
+        Text(
+          title,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
           ),
-          child: Row(
+        ),
+        const SizedBox(height: AppDimensions.spaceS),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const minCardWidth = 200.0;
+            const spacing = AppDimensions.spaceM;
+
+            final maxColumns =
+                ((constraints.maxWidth + spacing) / (minCardWidth + spacing))
+                    .floor();
+            final columns = maxColumns.clamp(1, cards.length);
+            final cardWidth =
+                (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                for (final card in cards)
+                  SizedBox(width: cardWidth, child: card),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              const SkeletonBox(width: 24, height: 24, borderRadius: 12),
-              const SizedBox(width: AppDimensions.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SkeletonBox(width: 100, height: 14),
-                    const SizedBox(height: AppDimensions.spaceXs),
-                    const SkeletonBox(width: 140, height: 20),
+                  children: const [
+                    SkeletonBox(width: 180, height: 24),
+                    SizedBox(height: AppDimensions.spaceXs),
+                    SkeletonBox(width: 260, height: 14),
                   ],
                 ),
               ),
+              const SkeletonBox(width: 100, height: 36, borderRadius: 8),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: AppDimensions.spaceL),
+          Wrap(
+            spacing: AppDimensions.spaceM,
+            runSpacing: AppDimensions.spaceM,
+            children: List.generate(7, (_) => const _SummaryCardSkeleton()),
+          ),
+          const SizedBox(height: AppDimensions.spaceL),
+          const _SkeletonCardBlock(height: 180),
+          const SizedBox(height: AppDimensions.spaceM),
+          const _SkeletonCardBlock(height: 100),
+          const SizedBox(height: AppDimensions.spaceM),
+          const _SkeletonCardBlock(height: 90),
+        ],
+      ),
     );
   }
 }
@@ -184,7 +330,7 @@ class _SummaryCardSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200,
+      width: 220,
       padding: const EdgeInsets.all(AppDimensions.spaceL),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -196,93 +342,33 @@ class _SummaryCardSkeleton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SkeletonBox(width: 90, height: 14),
-          SizedBox(height: AppDimensions.spaceXs),
-          SkeletonBox(width: 60, height: 24),
+          SizedBox(height: AppDimensions.spaceM),
+          SkeletonBox(width: 60, height: 32),
         ],
       ),
     );
   }
 }
 
-class _AlertCard extends StatelessWidget {
-  const _AlertCard({required this.message, required this.onTap});
+class _SkeletonCardBlock extends StatelessWidget {
+  const _SkeletonCardBlock({required this.height});
 
-  final String message;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: AppDecorations.borderRadiusXl,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppDimensions.spaceM),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: AppDecorations.borderRadiusXl,
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.error),
-            const SizedBox(width: AppDimensions.spaceM),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: AppColors.error),
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: AppColors.error),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DiskCard extends StatelessWidget {
-  const _DiskCard({
-    required this.usageLabel,
-    required this.isWarning,
-    required this.onArchiveTap,
-  });
-
-  final String usageLabel;
-  final bool isWarning;
-  final VoidCallback onArchiveTap;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = isWarning ? AppColors.error : AppColors.primary;
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.spaceM),
+      height: height,
+      padding: const EdgeInsets.all(AppDimensions.spaceL),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppDecorations.borderRadiusXl,
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.storage_rounded, color: accentColor),
-          const SizedBox(width: AppDimensions.spaceM),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Disk Kullanımı', style: Theme.of(context).textTheme.bodyMedium),
-                Text(usageLabel, style: Theme.of(context).textTheme.titleLarge),
-              ],
-            ),
-          ),
-          if (isWarning)
-            TextButton(
-              onPressed: onArchiveTap,
-              child: const Text('Arşivleme önerilir'),
-            ),
-        ],
+      child: const Align(
+        alignment: Alignment.topLeft,
+        child: SkeletonBox(width: 160, height: 18),
       ),
     );
   }
@@ -300,7 +386,8 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 40),
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.error, size: 40),
           const SizedBox(height: AppDimensions.spaceM),
           Text(message, style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: AppDimensions.spaceM),

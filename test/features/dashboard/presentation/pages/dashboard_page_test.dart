@@ -5,6 +5,7 @@ import 'package:leather_care_admin/app/app_routes.dart';
 import 'package:leather_care_admin/core/di/injection.dart';
 import 'package:leather_care_admin/core/theme/app_theme.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
+import 'package:leather_care_admin/core/widgets/skeleton_box.dart';
 import 'package:leather_care_admin/features/dashboard/data/dashboard_repository.dart';
 import 'package:leather_care_admin/features/dashboard/data/dto/dashboard_summary_dto.dart';
 import 'package:leather_care_admin/features/dashboard/presentation/pages/dashboard_page.dart';
@@ -35,8 +36,9 @@ void main() {
         ),
         GoRoute(
           path: AppRoutes.workOrders,
-          builder: (context, state) =>
-              const Scaffold(body: Text('work-orders-page')),
+          builder: (context, state) => Scaffold(
+            body: Text('work-orders-page-${state.uri.query}'),
+          ),
         ),
         GoRoute(
           path: AppRoutes.archive,
@@ -60,17 +62,30 @@ void main() {
     diskUsageBytes: 120 * 1024 * 1024 * 1024,
   );
 
-  testWidgets('renders summary cards after successful load', (tester) async {
+  const summaryAllZero = DashboardSummaryDto(
+    receivedCount: 0,
+    inProgressCount: 0,
+    readyCount: 0,
+    receivedTodayCount: 0,
+    deliveredTodayCount: 0,
+    dailyRevenue: 0,
+    monthlyRevenue: 0,
+    readyWaitingOverdueCount: 0,
+    diskUsageBytes: 0,
+  );
+
+  testWidgets('shows a skeleton loader before the first load resolves', (
+    tester,
+  ) async {
     fakeRepository.summaryToReturn = summaryWithWarnings;
 
     await tester.pumpWidget(buildSubject());
-    await tester.pumpAndSettle();
 
-    expect(find.text('10'), findsOneWidget);
-    expect(find.textContaining('1.250,50'), findsOneWidget);
+    expect(find.text('Genel Bakış'), findsNothing);
+    expect(find.byType(SkeletonBox), findsWidgets);
   });
 
-  testWidgets('navigates to work orders on overdue alert tap', (
+  testWidgets('renders KPI cards, donut legend, and financial summary', (
     tester,
   ) async {
     fakeRepository.summaryToReturn = summaryWithWarnings;
@@ -78,15 +93,56 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('7+ gündür teslim bekleyen: 3'), findsOneWidget);
+    expect(find.text('Genel Bakış'), findsOneWidget);
+    expect(find.text('Teslim Alınan'), findsOneWidget);
+    // "İşlemde"/"Hazır" also appear as the donut legend's status labels.
+    expect(find.text('İşlemde'), findsNWidgets(2));
+    expect(find.text('Hazır'), findsNWidgets(2));
+    expect(find.text('Bugün Alınan'), findsOneWidget);
+    expect(find.text('Bugün Teslim'), findsOneWidget);
+    expect(find.text('Günlük Ciro'), findsOneWidget);
+    expect(find.text('Aylık Ciro'), findsOneWidget);
+    // Appears both in the "Teslim Alınan" KPI card and the donut legend.
+    expect(find.text('10'), findsNWidgets(2));
+    expect(find.textContaining('1.250,50'), findsWidgets);
 
-    final alertFinder = find.textContaining('7+ gündür teslim bekleyen');
-    await tester.ensureVisible(alertFinder);
-    await tester.tap(alertFinder);
+    expect(find.text('İş Durumu Dağılımı'), findsOneWidget);
+    expect(find.text('Bugünkü Operasyon'), findsOneWidget);
+    expect(find.text('Finansal Özet'), findsOneWidget);
+  });
+
+  testWidgets('shows the empty-state hint when every value is zero', (
+    tester,
+  ) async {
+    fakeRepository.summaryToReturn = summaryAllZero;
+
+    await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    expect(find.text('work-orders-page'), findsOneWidget);
+    expect(
+      find.textContaining('Henüz dashboard verisi bulunmuyor'),
+      findsOneWidget,
+    );
   });
+
+  testWidgets(
+    'navigates to work orders with the READY filter on overdue alert tap',
+    (tester) async {
+      fakeRepository.summaryToReturn = summaryWithWarnings;
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('3 iş emri uzun süredir'), findsOneWidget);
+
+      final alertFinder = find.text('READY işlerini görüntüle');
+      await tester.ensureVisible(alertFinder);
+      await tester.tap(alertFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('work-orders-page-status=READY'), findsOneWidget);
+    },
+  );
 
   testWidgets('navigates to archive on disk warning tap', (tester) async {
     fakeRepository.summaryToReturn = summaryWithWarnings;
@@ -94,7 +150,7 @@ void main() {
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    final diskButtonFinder = find.text('Arşivleme önerilir');
+    final diskButtonFinder = find.text('Arşivlemeyi Aç');
     await tester.ensureVisible(diskButtonFinder);
     await tester.tap(diskButtonFinder);
     await tester.pumpAndSettle();
@@ -105,14 +161,14 @@ void main() {
   testWidgets('shows error view with retry on failure', (tester) async {
     fakeRepository.exceptionToThrow = ApiException(
       message: 'Sunucu hatası',
-      detail: 'Panel verileri alınamadı.',
+      detail: 'Dashboard verileri yüklenemedi.',
       statusCode: 500,
     );
 
     await tester.pumpWidget(buildSubject());
     await tester.pumpAndSettle();
 
-    expect(find.text('Panel verileri alınamadı.'), findsOneWidget);
+    expect(find.text('Dashboard verileri yüklenemedi.'), findsOneWidget);
 
     fakeRepository.exceptionToThrow = null;
     fakeRepository.summaryToReturn = summaryWithWarnings;
@@ -120,7 +176,23 @@ void main() {
     await tester.tap(find.text('Tekrar Dene'));
     await tester.pumpAndSettle();
 
-    expect(find.text('10'), findsOneWidget);
+    expect(find.text('Genel Bakış'), findsOneWidget);
+  });
+
+  testWidgets('Yenile button reloads and updates last-updated time', (
+    tester,
+  ) async {
+    fakeRepository.summaryToReturn = summaryWithWarnings;
+
+    await tester.pumpWidget(buildSubject());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Son güncelleme:'), findsOneWidget);
+
+    await tester.tap(find.text('Yenile'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Genel Bakış'), findsOneWidget);
   });
 }
 
