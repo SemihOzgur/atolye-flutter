@@ -128,6 +128,22 @@ class ConsumableCubit extends Cubit<ConsumableState> {
     return group;
   }
 
+  Future<void> deleteGroup(int id) async {
+    await _repository.deleteConsumableGroup(id);
+    if (state.selectedGroupId == id) {
+      emit(
+        ConsumableState(
+          status: state.status,
+          groups: state.groups,
+          products: state.products,
+          selectedGroupId: null,
+          brandFilter: state.brandFilter,
+        ),
+      );
+    }
+    await load();
+  }
+
   Future<ConsumableProductDto> createProduct(
     CreateConsumableProductRequestDto request,
   ) async {
@@ -143,5 +159,10 @@ class ConsumableCubit extends Cubit<ConsumableState> {
     final product = await _repository.updateConsumableProduct(id, request);
     await _reloadProducts();
     return product;
+  }
+
+  Future<void> deleteProduct(int id) async {
+    await _repository.deleteConsumableProduct(id);
+    await _reloadProducts();
   }
 }

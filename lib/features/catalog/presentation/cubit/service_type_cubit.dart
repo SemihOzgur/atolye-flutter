@@ -43,4 +43,9 @@ class ServiceTypeCubit extends Cubit<ServiceTypeState> {
     await load();
     return updated;
   }
+
+  Future<void> delete(int id) async {
+    await _repository.deleteServiceType(id);
+    await load();
+  }
 }

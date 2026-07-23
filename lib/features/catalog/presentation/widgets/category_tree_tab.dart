@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/network/api_error_codes.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -10,6 +11,7 @@ import '../../data/dto/create_category_request_dto.dart';
 import '../../data/dto/update_category_request_dto.dart';
 import '../cubit/category_cubit.dart';
 import '../cubit/category_state.dart';
+import 'catalog_delete_support.dart';
 
 class CategoryTreeTab extends StatefulWidget {
   const CategoryTreeTab({super.key});
@@ -20,6 +22,7 @@ class CategoryTreeTab extends StatefulWidget {
 
 class _CategoryTreeTabState extends State<CategoryTreeTab> {
   CategoryTreeDto? _selectedNode;
+  final Set<int> _deletingIds = <int>{};
 
   Future<void> _openCreateDialog(BuildContext context) async {
     final cubit = context.read<CategoryCubit>();
@@ -185,6 +188,72 @@ class _CategoryTreeTabState extends State<CategoryTreeTab> {
     }
   }
 
+  Future<void> _confirmDeleteCategory(
+    BuildContext context,
+    CategoryTreeDto node,
+  ) async {
+    final confirmed = await confirmCatalogDelete(
+      context,
+      title: 'Kategoriyi Sil?',
+      message:
+          '"${node.name}" kategorisini silmek istediğinize emin misiniz?\n\n'
+          'Bu işlem geri alınamaz.',
+    );
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    final cubit = context.read<CategoryCubit>();
+    setState(() => _deletingIds.add(node.id));
+
+    try {
+      await cubit.deleteCategory(node.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kategori başarıyla silindi.')),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        await handleCatalogDeleteConflict(
+          context: context,
+          error: e,
+          messages: {
+            ApiErrorCodes.categoryNotFound:
+                'Kategori bulunamadı. Liste güncel olmayabilir.',
+            ApiErrorCodes.categoryHasChildren:
+                'Bu kategori alt kategorilere sahip olduğu için silinemez. '
+                    'Önce alt kategorileri kaldırın veya pasif hale getirin.',
+            ApiErrorCodes.categoryInUse:
+                'Bu kategori geçmiş iş emirlerinde kullanıldığı için silinemez.',
+          },
+          deactivate: e.errorCode == ApiErrorCodes.categoryInUse
+              ? () => cubit.updateCategory(
+                    node.id,
+                    UpdateCategoryRequestDto(
+                      name: node.name,
+                      sortOrder: 0,
+                      isActive: false,
+                    ),
+                  )
+              : null,
+        );
+      }
+      if (e.errorCode == ApiErrorCodes.categoryNotFound) {
+        await cubit.load();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (_selectedNode?.id == node.id) {
+            _selectedNode = null;
+          }
+          _deletingIds.remove(node.id);
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CategoryCubit, CategoryState>(
@@ -226,9 +295,12 @@ class _CategoryTreeTabState extends State<CategoryTreeTab> {
                       .map((node) => _CategoryNodeTile(
                             node: node,
                             selectedNode: _selectedNode,
+                            deletingIds: _deletingIds,
                             onSelect: (node) =>
                                 setState(() => _selectedNode = node),
                             onEdit: (node) => _openEditDialog(context, node),
+                            onDelete: (node) =>
+                                _confirmDeleteCategory(context, node),
                           ))
                       .toList(),
                 ),
@@ -244,18 +316,23 @@ class _CategoryNodeTile extends StatelessWidget {
   const _CategoryNodeTile({
     required this.node,
     required this.selectedNode,
+    required this.deletingIds,
     required this.onSelect,
     required this.onEdit,
+    required this.onDelete,
   });
 
   final CategoryTreeDto node;
   final CategoryTreeDto? selectedNode;
+  final Set<int> deletingIds;
   final ValueChanged<CategoryTreeDto> onSelect;
   final ValueChanged<CategoryTreeDto> onEdit;
+  final ValueChanged<CategoryTreeDto> onDelete;
 
   @override
   Widget build(BuildContext context) {
     final isSelected = selectedNode?.id == node.id;
+    final isDeleting = deletingIds.contains(node.id);
 
     final tile = ListTile(
       selected: isSelected,
@@ -283,10 +360,29 @@ class _CategoryNodeTile extends StatelessWidget {
           ],
         ],
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit_outlined),
-        onPressed: () => onEdit(node),
-      ),
+      trailing: isDeleting
+          ? const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppDimensions.spaceM),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => onEdit(node),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                  tooltip: 'Sil',
+                  onPressed: () => onDelete(node),
+                ),
+              ],
+            ),
     );
 
     if (node.children.isEmpty) {
@@ -307,8 +403,10 @@ class _CategoryNodeTile extends StatelessWidget {
               (child) => _CategoryNodeTile(
                 node: child,
                 selectedNode: selectedNode,
+                deletingIds: deletingIds,
                 onSelect: onSelect,
                 onEdit: onEdit,
+                onDelete: onDelete,
               ),
             )
             .toList(),

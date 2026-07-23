@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/network/api_error_codes.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -10,9 +11,17 @@ import '../../data/dto/service_type_dto.dart';
 import '../../data/dto/update_service_type_request_dto.dart';
 import '../cubit/service_type_cubit.dart';
 import '../cubit/service_type_state.dart';
+import 'catalog_delete_support.dart';
 
-class ServiceTypesTab extends StatelessWidget {
+class ServiceTypesTab extends StatefulWidget {
   const ServiceTypesTab({super.key});
+
+  @override
+  State<ServiceTypesTab> createState() => _ServiceTypesTabState();
+}
+
+class _ServiceTypesTabState extends State<ServiceTypesTab> {
+  final Set<int> _deletingIds = <int>{};
 
   Future<void> _openFormDialog(
     BuildContext context, {
@@ -105,6 +114,65 @@ class ServiceTypesTab extends StatelessWidget {
     }
   }
 
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ServiceTypeDto serviceType,
+  ) async {
+    final confirmed = await confirmCatalogDelete(
+      context,
+      title: 'Hizmet Türünü Sil?',
+      message:
+          '"${serviceType.name}" hizmet türünü silmek istediğinize emin '
+          'misiniz?\n\nBu işlem geri alınamaz.',
+    );
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    final cubit = context.read<ServiceTypeCubit>();
+    setState(() => _deletingIds.add(serviceType.id));
+
+    try {
+      await cubit.delete(serviceType.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Hizmet türü başarıyla silindi.')),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        await handleCatalogDeleteConflict(
+          context: context,
+          error: e,
+          messages: {
+            ApiErrorCodes.serviceTypeNotFound:
+                'Hizmet türü bulunamadı. Liste güncel olmayabilir.',
+            ApiErrorCodes.serviceTypeInUse:
+                'Bu hizmet türü geçmiş iş emirlerinde kullanıldığı için '
+                    'silinemez.',
+          },
+          deactivate: e.errorCode == ApiErrorCodes.serviceTypeInUse
+              ? () => cubit.update(
+                    serviceType.id,
+                    UpdateServiceTypeRequestDto(
+                      name: serviceType.name,
+                      sortOrder: serviceType.sortOrder,
+                      isActive: false,
+                    ),
+                  )
+              : null,
+        );
+      }
+      if (e.errorCode == ApiErrorCodes.serviceTypeNotFound) {
+        await cubit.load();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _deletingIds.remove(serviceType.id));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -144,27 +212,52 @@ class ServiceTypesTab extends StatelessWidget {
                     const Divider(color: AppColors.border, height: 1),
                 itemBuilder: (context, index) {
                   final serviceType = state.items[index];
+                  final isDeleting = _deletingIds.contains(serviceType.id);
                   return ListTile(
                     title: Text(serviceType.name),
                     subtitle: Text('Sıra: ${serviceType.sortOrder}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!serviceType.isActive)
-                          const Padding(
-                            padding: EdgeInsets.only(right: AppDimensions.spaceS),
-                            child: Text(
-                              'pasif',
-                              style: TextStyle(color: AppColors.textMuted),
+                    trailing: isDeleting
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: AppDimensions.spaceM,
                             ),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!serviceType.isActive)
+                                const Padding(
+                                  padding: EdgeInsets.only(
+                                    right: AppDimensions.spaceS,
+                                  ),
+                                  child: Text(
+                                    'pasif',
+                                    style: TextStyle(color: AppColors.textMuted),
+                                  ),
+                                ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                onPressed: () => _openFormDialog(
+                                  context,
+                                  existing: serviceType,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: AppColors.error,
+                                ),
+                                tooltip: 'Sil',
+                                onPressed: () =>
+                                    _confirmDelete(context, serviceType),
+                              ),
+                            ],
                           ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: () =>
-                              _openFormDialog(context, existing: serviceType),
-                        ),
-                      ],
-                    ),
                   );
                 },
               );
