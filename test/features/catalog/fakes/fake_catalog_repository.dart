@@ -34,6 +34,10 @@ class FakeCatalogRepository implements ICatalogRepository {
   List<dynamic>? lastBulkUpsertItems;
   int? lastProductsGroupId;
   String? lastProductsBrand;
+  int? lastDeletedCategoryId;
+  int? lastDeletedServiceTypeId;
+  int? lastDeletedConsumableGroupId;
+  int? lastDeletedConsumableProductId;
 
   @override
   Future<List<CategoryTreeDto>> fetchCategoryTree({
@@ -56,6 +60,12 @@ class FakeCatalogRepository implements ICatalogRepository {
   ) async {
     if (exceptionToThrow != null) throw exceptionToThrow!;
     return categoryResultToReturn!;
+  }
+
+  @override
+  Future<void> deleteCategory(int id) async {
+    lastDeletedCategoryId = id;
+    if (exceptionToThrow != null) throw exceptionToThrow!;
   }
 
   @override
@@ -85,6 +95,12 @@ class FakeCatalogRepository implements ICatalogRepository {
   ) async {
     if (exceptionToThrow != null) throw exceptionToThrow!;
     return serviceTypeResultToReturn!;
+  }
+
+  @override
+  Future<void> deleteServiceType(int id) async {
+    lastDeletedServiceTypeId = id;
+    if (exceptionToThrow != null) throw exceptionToThrow!;
   }
 
   @override
@@ -127,6 +143,12 @@ class FakeCatalogRepository implements ICatalogRepository {
   }
 
   @override
+  Future<void> deleteConsumableGroup(int id) async {
+    lastDeletedConsumableGroupId = id;
+    if (exceptionToThrow != null) throw exceptionToThrow!;
+  }
+
+  @override
   Future<List<ConsumableProductDto>> fetchConsumableProducts({
     int? groupId,
     String? brand,
@@ -152,5 +174,11 @@ class FakeCatalogRepository implements ICatalogRepository {
   ) async {
     if (exceptionToThrow != null) throw exceptionToThrow!;
     return consumableProductResultToReturn!;
+  }
+
+  @override
+  Future<void> deleteConsumableProduct(int id) async {
+    lastDeletedConsumableProductId = id;
+    if (exceptionToThrow != null) throw exceptionToThrow!;
   }
 }

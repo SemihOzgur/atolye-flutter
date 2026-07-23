@@ -27,6 +27,8 @@ abstract class ICatalogRepository {
 
   Future<CategoryDto> updateCategory(int id, UpdateCategoryRequestDto request);
 
+  Future<void> deleteCategory(int id);
+
   Future<CategoryServicesDto> fetchCategoryServices(int categoryId);
 
   Future<List<ServiceTypeDto>> fetchServiceTypes();
@@ -37,6 +39,8 @@ abstract class ICatalogRepository {
     int id,
     UpdateServiceTypeRequestDto request,
   );
+
+  Future<void> deleteServiceType(int id);
 
   Future<List<ServicePriceDto>> fetchServicePrices({int? categoryId});
 
@@ -55,6 +59,8 @@ abstract class ICatalogRepository {
     UpdateConsumableGroupRequestDto request,
   );
 
+  Future<void> deleteConsumableGroup(int id);
+
   Future<List<ConsumableProductDto>> fetchConsumableProducts({
     int? groupId,
     String? brand,
@@ -68,6 +74,8 @@ abstract class ICatalogRepository {
     int id,
     UpdateConsumableProductRequestDto request,
   );
+
+  Future<void> deleteConsumableProduct(int id);
 }
 
 class CatalogRepository implements ICatalogRepository {
@@ -119,6 +127,15 @@ class CatalogRepository implements ICatalogRepository {
       );
 
       return CategoryDto.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  @override
+  Future<void> deleteCategory(int id) async {
+    try {
+      await _dio.delete<void>(ApiEndpoints.deleteCategory(id).path);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
@@ -180,6 +197,15 @@ class CatalogRepository implements ICatalogRepository {
       );
 
       return ServiceTypeDto.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  @override
+  Future<void> deleteServiceType(int id) async {
+    try {
+      await _dio.delete<void>(ApiEndpoints.deleteServiceType(id).path);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
@@ -272,6 +298,15 @@ class CatalogRepository implements ICatalogRepository {
   }
 
   @override
+  Future<void> deleteConsumableGroup(int id) async {
+    try {
+      await _dio.delete<void>(ApiEndpoints.deleteConsumableGroup(id).path);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  @override
   Future<List<ConsumableProductDto>> fetchConsumableProducts({
     int? groupId,
     String? brand,
@@ -323,6 +358,15 @@ class CatalogRepository implements ICatalogRepository {
       );
 
       return ConsumableProductDto.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  @override
+  Future<void> deleteConsumableProduct(int id) async {
+    try {
+      await _dio.delete<void>(ApiEndpoints.deleteConsumableProduct(id).path);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

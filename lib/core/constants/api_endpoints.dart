@@ -40,6 +40,8 @@ class ApiEndpoints {
       ApiRoute('/api/categories', HttpMethod.post);
   static ApiRoute updateCategory(int categoryId) =>
       ApiRoute('/api/categories/$categoryId', HttpMethod.put);
+  static ApiRoute deleteCategory(int categoryId) =>
+      ApiRoute('/api/categories/$categoryId', HttpMethod.delete);
 
   static const ApiRoute serviceTypes =
       ApiRoute('/api/service-types', HttpMethod.get);
@@ -47,6 +49,8 @@ class ApiEndpoints {
       ApiRoute('/api/service-types', HttpMethod.post);
   static ApiRoute updateServiceType(int serviceTypeId) =>
       ApiRoute('/api/service-types/$serviceTypeId', HttpMethod.put);
+  static ApiRoute deleteServiceType(int serviceTypeId) =>
+      ApiRoute('/api/service-types/$serviceTypeId', HttpMethod.delete);
 
   static const ApiRoute servicePrices =
       ApiRoute('/api/service-prices', HttpMethod.get);
@@ -61,6 +65,8 @@ class ApiEndpoints {
       ApiRoute('/api/consumable-groups', HttpMethod.post);
   static ApiRoute updateConsumableGroup(int groupId) =>
       ApiRoute('/api/consumable-groups/$groupId', HttpMethod.put);
+  static ApiRoute deleteConsumableGroup(int groupId) =>
+      ApiRoute('/api/consumable-groups/$groupId', HttpMethod.delete);
 
   static const ApiRoute consumableProducts =
       ApiRoute('/api/consumable-products', HttpMethod.get);
@@ -68,6 +74,8 @@ class ApiEndpoints {
       ApiRoute('/api/consumable-products', HttpMethod.post);
   static ApiRoute updateConsumableProduct(int productId) =>
       ApiRoute('/api/consumable-products/$productId', HttpMethod.put);
+  static ApiRoute deleteConsumableProduct(int productId) =>
+      ApiRoute('/api/consumable-products/$productId', HttpMethod.delete);
 
   static const ApiRoute createWorkOrder =
       ApiRoute('/api/work-orders', HttpMethod.post);
