@@ -95,4 +95,35 @@ void main() {
 
     expect(find.text('work-order-detail-7'), findsOneWidget);
   });
+
+  testWidgets('applies the initialStatus query param as the status filter', (
+    tester,
+  ) async {
+    fakeRepository.pageToReturn = const PagedResponse(
+      items: <WorkOrderListItemDto>[],
+      page: 1,
+      pageSize: 20,
+      totalCount: 0,
+    );
+
+    final router = GoRouter(
+      initialLocation: '${AppRoutes.workOrders}?status=READY',
+      routes: [
+        GoRoute(
+          path: AppRoutes.workOrders,
+          builder: (context, state) => Scaffold(
+            body: WorkOrderListPage(
+              initialStatus: state.uri.queryParameters['status'],
+            ),
+          ),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(fakeRepository.lastSearchStatus, 'READY');
+  });
 }

@@ -16,6 +16,7 @@ class FakeWorkOrderRepository implements IWorkOrderRepository {
   int? lastResendId;
   UpdateWorkOrderStatusRequestDto? lastStatusRequest;
   DeliverWorkOrderRequestDto? lastDeliverRequest;
+  String? lastSearchStatus;
 
   @override
   Future<PagedResponse<WorkOrderListItemDto>> search({
@@ -24,6 +25,7 @@ class FakeWorkOrderRepository implements IWorkOrderRepository {
     int page = 1,
     int pageSize = 20,
   }) async {
+    lastSearchStatus = status;
     if (exceptionToThrow != null) throw exceptionToThrow!;
     return pageToReturn!;
   }

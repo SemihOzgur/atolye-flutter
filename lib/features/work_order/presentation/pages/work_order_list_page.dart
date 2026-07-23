@@ -26,13 +26,15 @@ const _statusOptions = <String?, String>{
 };
 
 class WorkOrderListPage extends StatelessWidget {
-  const WorkOrderListPage({super.key});
+  const WorkOrderListPage({super.key, this.initialStatus});
+
+  final String? initialStatus;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<WorkOrderListCubit>(
       create: (_) => WorkOrderListCubit(getIt<IWorkOrderRepository>())
-        ..search(),
+        ..search(status: initialStatus),
       child: const _WorkOrderListView(),
     );
   }

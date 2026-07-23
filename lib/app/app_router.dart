@@ -66,8 +66,11 @@ GoRouter buildAppRouter(
           ),
           GoRoute(
             path: AppRoutes.workOrders,
-            pageBuilder: (context, state) =>
-                const NoTransitionPage(child: WorkOrderListPage()),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: WorkOrderListPage(
+                initialStatus: state.uri.queryParameters['status'],
+              ),
+            ),
             routes: [
               GoRoute(
                 path: 'new',
