@@ -28,6 +28,7 @@ mixin _$CreateWorkOrderRequestDto {
   String? get material => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   String? get existingDamages => throw _privateConstructorUsedError;
+  @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
   DateTime? get estimatedDeliveryDate => throw _privateConstructorUsedError;
   List<int> get servicePriceIds => throw _privateConstructorUsedError;
   List<ConsumableLineDto> get consumables => throw _privateConstructorUsedError;
@@ -59,6 +60,7 @@ abstract class $CreateWorkOrderRequestDtoCopyWith<$Res> {
       String? material,
       String? description,
       String? existingDamages,
+      @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
       DateTime? estimatedDeliveryDate,
       List<int> servicePriceIds,
       List<ConsumableLineDto> consumables,
@@ -171,6 +173,7 @@ abstract class _$$CreateWorkOrderRequestDtoImplCopyWith<$Res>
       String? material,
       String? description,
       String? existingDamages,
+      @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
       DateTime? estimatedDeliveryDate,
       List<int> servicePriceIds,
       List<ConsumableLineDto> consumables,
@@ -276,6 +279,7 @@ class _$CreateWorkOrderRequestDtoImpl implements _CreateWorkOrderRequestDto {
       this.material,
       this.description,
       this.existingDamages,
+      @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
       this.estimatedDeliveryDate,
       final List<int> servicePriceIds = const <int>[],
       final List<ConsumableLineDto> consumables = const <ConsumableLineDto>[],
@@ -303,6 +307,7 @@ class _$CreateWorkOrderRequestDtoImpl implements _CreateWorkOrderRequestDto {
   @override
   final String? existingDamages;
   @override
+  @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
   final DateTime? estimatedDeliveryDate;
   final List<int> _servicePriceIds;
   @override
@@ -408,6 +413,7 @@ abstract class _CreateWorkOrderRequestDto implements CreateWorkOrderRequestDto {
       final String? material,
       final String? description,
       final String? existingDamages,
+      @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
       final DateTime? estimatedDeliveryDate,
       final List<int> servicePriceIds,
       final List<ConsumableLineDto> consumables,
@@ -433,6 +439,7 @@ abstract class _CreateWorkOrderRequestDto implements CreateWorkOrderRequestDto {
   @override
   String? get existingDamages;
   @override
+  @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
   DateTime? get estimatedDeliveryDate;
   @override
   List<int> get servicePriceIds;

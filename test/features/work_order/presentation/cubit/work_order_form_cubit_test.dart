@@ -123,6 +123,63 @@ void main() {
     expect(cubit.state.fieldErrors['prepaymentAmount'], isNotNull);
   });
 
+  test('submit clears previous field errors on a new attempt', () async {
+    workOrderRepository.exceptionToThrow = ApiException(
+      message: 'Validation failed',
+      statusCode: 400,
+      fieldErrors: {
+        'prepaymentAmount': ['Ön ödeme tutarı nihai fiyatı aşamaz.'],
+      },
+    );
+
+    await cubit.submit(
+      const CreateWorkOrderRequestDto(
+        customerId: 1,
+        categoryId: 3,
+        price: 100,
+        hasPrepayment: true,
+        prepaymentAmount: 200,
+      ),
+    );
+    expect(cubit.state.fieldErrors, isNotEmpty);
+
+    workOrderRepository.exceptionToThrow = null;
+    workOrderRepository.workOrderToReturn = WorkOrderDto(
+      id: 6,
+      orderNumber: 'WO-2026-000006',
+      customer: CustomerDto(
+        id: 1,
+        firstName: 'Ayşe',
+        lastName: 'Yılmaz',
+        phone: '+905321234567',
+        iysConsentStatus: 'APPROVED',
+        createdAt: DateTime(2026, 1, 1),
+      ),
+      categoryId: 3,
+      categoryPath: 'Kadın > Ayakkabı > Sneakers',
+      suggestedPrice: 100,
+      price: 100,
+      hasPrepayment: false,
+      remainingAmount: 100,
+      status: 'RECEIVED',
+      socialMediaConsent: false,
+      trackingUrl: 'https://dotikadbm.com/t/abc',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
+
+    await cubit.submit(
+      const CreateWorkOrderRequestDto(
+        customerId: 1,
+        categoryId: 3,
+        price: 100,
+        hasPrepayment: false,
+      ),
+    );
+
+    expect(cubit.state.fieldErrors, isEmpty);
+  });
+
   test('submitUpdate sends update with concurrency token', () async {
     workOrderRepository.workOrderToReturn = WorkOrderDto(
       id: 5,

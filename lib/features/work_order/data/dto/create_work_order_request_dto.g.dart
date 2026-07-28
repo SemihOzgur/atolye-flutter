@@ -16,9 +16,8 @@ _$CreateWorkOrderRequestDtoImpl _$$CreateWorkOrderRequestDtoImplFromJson(
       material: json['material'] as String?,
       description: json['description'] as String?,
       existingDamages: json['existingDamages'] as String?,
-      estimatedDeliveryDate: json['estimatedDeliveryDate'] == null
-          ? null
-          : DateTime.parse(json['estimatedDeliveryDate'] as String),
+      estimatedDeliveryDate:
+          dateOnlyFromJson(json['estimatedDeliveryDate'] as String?),
       servicePriceIds: (json['servicePriceIds'] as List<dynamic>?)
               ?.map((e) => (e as num).toInt())
               .toList() ??
@@ -43,8 +42,7 @@ Map<String, dynamic> _$$CreateWorkOrderRequestDtoImplToJson(
       'material': instance.material,
       'description': instance.description,
       'existingDamages': instance.existingDamages,
-      'estimatedDeliveryDate':
-          instance.estimatedDeliveryDate?.toIso8601String(),
+      'estimatedDeliveryDate': dateOnlyToJson(instance.estimatedDeliveryDate),
       'servicePriceIds': instance.servicePriceIds,
       'consumables': instance.consumables,
       'price': instance.price,
