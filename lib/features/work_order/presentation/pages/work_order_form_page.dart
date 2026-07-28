@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/network/field_error_resolver.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -436,6 +437,7 @@ class _WorkOrderFormViewState extends State<_WorkOrderFormView> {
                 final level3Categories = _flattenLevel3(state.categoryTree);
                 final isSubmitting =
                     state.submitStatus == WorkOrderFormSubmitStatus.submitting;
+                final fieldErrors = FieldErrorResolver(state.fieldErrors);
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,29 +597,43 @@ class _WorkOrderFormViewState extends State<_WorkOrderFormView> {
                     const SizedBox(height: AppDimensions.spaceS),
                     TextField(
                       controller: _brandController,
-                      decoration: const InputDecoration(labelText: 'Marka'),
+                      decoration: InputDecoration(
+                        labelText: 'Marka',
+                        errorText: fieldErrors.errorFor('brand'),
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     TextField(
                       controller: _colorController,
-                      decoration: const InputDecoration(labelText: 'Renk'),
+                      decoration: InputDecoration(
+                        labelText: 'Renk',
+                        errorText: fieldErrors.errorFor('color'),
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     TextField(
                       controller: _materialController,
-                      decoration: const InputDecoration(labelText: 'Malzeme'),
+                      decoration: InputDecoration(
+                        labelText: 'Malzeme',
+                        errorText: fieldErrors.errorFor('material'),
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     TextField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(labelText: 'Açıklama'),
+                      decoration: InputDecoration(
+                        labelText: 'Açıklama',
+                        errorText: fieldErrors.errorFor('description'),
+                      ),
                       maxLines: 2,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
                     TextField(
                       controller: _damagesController,
-                      decoration:
-                          const InputDecoration(labelText: 'Mevcut Hasarlar'),
+                      decoration: InputDecoration(
+                        labelText: 'Mevcut Hasarlar',
+                        errorText: fieldErrors.errorFor('existingDamages'),
+                      ),
                       maxLines: 2,
                     ),
                     const SizedBox(height: AppDimensions.spaceM),
@@ -639,6 +655,17 @@ class _WorkOrderFormViewState extends State<_WorkOrderFormView> {
                         ),
                       ],
                     ),
+                    if (fieldErrors.errorFor('estimatedDeliveryDate') !=
+                        null) ...[
+                      const SizedBox(height: AppDimensions.spaceXs),
+                      Text(
+                        fieldErrors.errorFor('estimatedDeliveryDate')!,
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: AppDimensions.spaceL),
 
@@ -656,7 +683,10 @@ class _WorkOrderFormViewState extends State<_WorkOrderFormView> {
                     const SizedBox(height: AppDimensions.spaceM),
                     TextField(
                       controller: _priceController,
-                      decoration: const InputDecoration(labelText: 'Nihai Fiyat'),
+                      decoration: InputDecoration(
+                        labelText: 'Nihai Fiyat',
+                        errorText: fieldErrors.errorFor('price'),
+                      ),
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       onChanged: (_) => setState(() => _priceManuallyEdited = true),
@@ -679,8 +709,10 @@ class _WorkOrderFormViewState extends State<_WorkOrderFormView> {
                     if (_hasPrepayment) ...[
                       TextField(
                         controller: _prepaymentController,
-                        decoration:
-                            const InputDecoration(labelText: 'Ön Ödeme Tutarı'),
+                        decoration: InputDecoration(
+                          labelText: 'Ön Ödeme Tutarı',
+                          errorText: fieldErrors.errorFor('prepaymentAmount'),
+                        ),
                         keyboardType:
                             const TextInputType.numberWithOptions(decimal: true),
                       ),

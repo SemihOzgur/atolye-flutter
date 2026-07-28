@@ -115,4 +115,65 @@ void main() {
     expect(cubit.state.errorMessage, 'Fiyatlar kaydedilemedi.');
     expect(cubit.state.rows, hasLength(2));
   });
+
+  test('selectCategory increments reloadStamp only on successful load',
+      () async {
+    repository.servicePricesToReturn = const [];
+    expect(cubit.state.reloadStamp, 0);
+
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    expect(cubit.state.reloadStamp, 1);
+
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    expect(cubit.state.reloadStamp, 2);
+
+    repository.exceptionToThrow = ApiException(message: 'err');
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    expect(cubit.state.reloadStamp, 2);
+  });
+
+  test('setRowValidity tracks invalid rows and blocks canSave', () async {
+    repository.servicePricesToReturn = const [];
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    expect(cubit.state.canSave, isTrue);
+
+    cubit.setRowValidity(1, false);
+    expect(cubit.state.invalidRowIds, {1});
+    expect(cubit.state.canSave, isFalse);
+
+    cubit.setRowValidity(2, false);
+    expect(cubit.state.invalidRowIds, {1, 2});
+
+    cubit.setRowValidity(1, true);
+    expect(cubit.state.invalidRowIds, {2});
+    expect(cubit.state.canSave, isFalse);
+
+    cubit.setRowValidity(2, true);
+    expect(cubit.state.invalidRowIds, isEmpty);
+    expect(cubit.state.canSave, isTrue);
+  });
+
+  test('saveAll is a no-op while any row is invalid', () async {
+    repository.servicePricesToReturn = const [];
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    cubit.setRowValidity(1, false);
+
+    await cubit.saveAll();
+
+    expect(repository.lastBulkUpsertItems, isNull);
+    expect(cubit.state.status, ServicePriceStatus.loaded);
+  });
+
+  test('a category switch clears invalidRowIds from the previous category',
+      () async {
+    repository.servicePricesToReturn = const [];
+    await cubit.selectCategory(3, 'Kadın > Ayakkabı > Sneakers');
+    cubit.setRowValidity(1, false);
+    expect(cubit.state.canSave, isFalse);
+
+    await cubit.selectCategory(4, 'Erkek > Çanta > Sırt Çantası');
+
+    expect(cubit.state.invalidRowIds, isEmpty);
+    expect(cubit.state.canSave, isTrue);
+  });
 }

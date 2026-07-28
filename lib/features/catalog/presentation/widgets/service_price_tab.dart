@@ -9,6 +9,7 @@ import '../cubit/category_cubit.dart';
 import '../cubit/category_state.dart';
 import '../cubit/service_price_cubit.dart';
 import '../cubit/service_price_state.dart';
+import 'price_row_field.dart';
 
 class _Level3Category {
   const _Level3Category({required this.id, required this.path});
@@ -120,40 +121,44 @@ class ServicePriceTab extends StatelessWidget {
                               ),
                               trailing: SizedBox(
                                 width: 140,
-                                child: TextFormField(
-                                  key: ValueKey(
-                                    'price-${row.serviceTypeId}-${row.price}',
-                                  ),
-                                  initialValue: row.price.toStringAsFixed(2),
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                                  decoration: const InputDecoration(
-                                    suffixText: '₺',
-                                  ),
-                                  onChanged: (value) {
-                                    final parsed = double.tryParse(
-                                      value.replaceAll(',', '.'),
-                                    );
-                                    if (parsed != null) {
-                                      context
-                                          .read<ServicePriceCubit>()
-                                          .updateRowPrice(
-                                            row.serviceTypeId,
-                                            parsed,
-                                          );
-                                    }
-                                  },
+                                child: PriceRowField(
+                                  key: ValueKey(row.serviceTypeId),
+                                  initialPrice: row.price,
+                                  resetToken: priceState.reloadStamp,
+                                  onValidChanged: (price) => context
+                                      .read<ServicePriceCubit>()
+                                      .updateRowPrice(
+                                        row.serviceTypeId,
+                                        price,
+                                      ),
+                                  onValidityChanged: (isValid) => context
+                                      .read<ServicePriceCubit>()
+                                      .setRowValidity(
+                                        row.serviceTypeId,
+                                        isValid,
+                                      ),
                                 ),
                               ),
                             );
                           },
                         ),
                       ),
+                      if (!priceState.canSave) ...[
+                        const Padding(
+                          padding: EdgeInsets.only(
+                            bottom: AppDimensions.spaceS,
+                          ),
+                          child: Text(
+                            'Kaydetmeden önce geçersiz tutarları düzeltin.',
+                            style: TextStyle(color: AppColors.error),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppDimensions.spaceM),
                       ElevatedButton(
-                        onPressed: priceState.status == ServicePriceStatus.saving
+                        onPressed: priceState.status ==
+                                    ServicePriceStatus.saving ||
+                                !priceState.canSave
                             ? null
                             : () => context.read<ServicePriceCubit>().saveAll(),
                         child: priceState.status == ServicePriceStatus.saving

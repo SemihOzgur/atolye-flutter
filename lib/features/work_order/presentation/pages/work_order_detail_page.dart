@@ -11,6 +11,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../media/presentation/widgets/media_section.dart';
+import '../../../receipt_printing/presentation/print_receipt_action.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_detail_cubit.dart';
 import '../cubit/work_order_detail_state.dart';
@@ -214,6 +215,7 @@ class _WorkOrderDetailView extends StatelessWidget {
                   const SizedBox(width: AppDimensions.spaceM),
                   WorkOrderStatusBadge(status: workOrder.status),
                   const Spacer(),
+                  PrintReceiptAction(workOrder: workOrder),
                   IconButton(
                     tooltip: 'Linki kopyala',
                     icon: const Icon(Icons.link_rounded),
