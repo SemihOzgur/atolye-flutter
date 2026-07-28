@@ -34,7 +34,7 @@ class SplashPage extends StatelessWidget {
                     const AppLogoMark(size: 180),
                     const SizedBox(height: AppDimensions.spaceL),
                     Text(
-                      'DoTiKa Admin',
+                      'DoTiKa',
                       style: Theme.of(context).textTheme.displayLarge,
                     ),
                     const SizedBox(height: AppDimensions.spaceS),
