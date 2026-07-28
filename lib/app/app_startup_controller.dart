@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/constants/storage_keys.dart';
+import '../core/di/injection.dart';
+import '../core/security/finance_lock_controller.dart';
 import '../core/services/storage_service.dart';
 
 enum AppLaunchState { loading, unauthenticated, authenticated }
@@ -37,6 +39,9 @@ class AppStartupController extends ChangeNotifier {
   Future<void> logout() async {
     await _storageService.delete(StorageKeys.authToken);
     _state = AppLaunchState.unauthenticated;
+    if (getIt.isRegistered<FinanceLockController>()) {
+      getIt<FinanceLockController>().lock();
+    }
     notifyListeners();
   }
 }

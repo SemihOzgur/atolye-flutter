@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_routes.dart';
+import '../../../../app/app_startup_controller.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/security/finance_lock_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -17,6 +19,7 @@ import '../widgets/daily_operations_card.dart';
 import '../widgets/dashboard_header.dart';
 import '../widgets/disk_usage_card.dart';
 import '../widgets/overdue_ready_card.dart';
+import '../widgets/pin_dialog.dart';
 import '../widgets/revenue_summary_card.dart';
 import '../widgets/status_distribution_card.dart';
 import '../widgets/summary_card.dart';
@@ -48,187 +51,221 @@ class _DashboardView extends StatelessWidget {
         summary.monthlyRevenue == 0;
   }
 
+  Future<void> _handleUnlockTap(
+    BuildContext context,
+    FinanceLockController financeLock,
+  ) async {
+    final hasPin = await financeLock.hasPin();
+    if (!context.mounted) return;
+    await PinDialog.show(
+      context,
+      mode: hasPin ? PinDialogMode.verify : PinDialogMode.setup,
+      controller: financeLock,
+      onForgotPin: () => getIt<AppStartupController>().logout(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DashboardCubit, DashboardState>(
-      builder: (context, state) {
-        final summary = state.summary;
+    final financeLock = getIt<FinanceLockController>();
 
-        if (summary == null) {
-          if (state.status == DashboardStatus.error) {
-            return _ErrorView(
-              message: state.errorMessage ?? 'Dashboard verileri yüklenemedi.',
-              onRetry: () => context.read<DashboardCubit>().load(),
+    return ListenableBuilder(
+      listenable: financeLock,
+      builder: (context, _) {
+        return BlocBuilder<DashboardCubit, DashboardState>(
+          builder: (context, state) {
+            final summary = state.summary;
+
+            if (summary == null) {
+              if (state.status == DashboardStatus.error) {
+                return _ErrorView(
+                  message:
+                      state.errorMessage ?? 'Dashboard verileri yüklenemedi.',
+                  onRetry: () => context.read<DashboardCubit>().load(),
+                );
+              }
+              return const _DashboardSkeleton();
+            }
+
+            final isRefreshing = state.status == DashboardStatus.loading;
+
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  DashboardHeader(
+                    isRefreshing: isRefreshing,
+                    lastUpdatedAt: state.lastUpdatedAt,
+                    onRefresh: () => context.read<DashboardCubit>().load(),
+                  ),
+                  if (_isEmpty(summary)) ...[
+                    const SizedBox(height: AppDimensions.spaceS),
+                    const Text(
+                      'Henüz dashboard verisi bulunmuyor. İlk iş emriniz '
+                      'oluşturulduğunda burada görünmeye başlayacak.',
+                      style: TextStyle(color: AppColors.textMuted),
+                    ),
+                  ],
+                  const SizedBox(height: AppDimensions.spaceL),
+                  _KpiGroup(
+                    title: 'İş Durumu',
+                    cards: [
+                      SummaryCard(
+                        label: 'Teslim Alınan',
+                        count: summary.receivedCount,
+                        icon: Icons.inventory_2_outlined,
+                        description: 'Toplam açık iş',
+                        accentColor: AppColors.textMuted,
+                      ),
+                      SummaryCard(
+                        label: 'İşlemde',
+                        count: summary.inProgressCount,
+                        icon: Icons.settings_outlined,
+                        description: 'Aktif iş emri',
+                        accentColor: AppColors.primary,
+                      ),
+                      SummaryCard(
+                        label: 'Hazır',
+                        count: summary.readyCount,
+                        icon: Icons.check_circle_outline_rounded,
+                        description: 'Teslime hazır',
+                        accentColor: AppColors.warning,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.spaceL),
+                  _KpiGroup(
+                    title: 'Bugün',
+                    cards: [
+                      SummaryCard(
+                        label: 'Bugün Alınan',
+                        count: summary.receivedTodayCount,
+                        icon: Icons.login_rounded,
+                        description: 'Bugün teslim alınan',
+                        accentColor: AppColors.primary,
+                      ),
+                      SummaryCard(
+                        label: 'Bugün Teslim',
+                        count: summary.deliveredTodayCount,
+                        icon: Icons.logout_rounded,
+                        description: 'Bugün teslim edilen',
+                        accentColor: AppColors.success,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.spaceL),
+                  _KpiGroup(
+                    title: 'Finans',
+                    cards: [
+                      SummaryCard(
+                        label: 'Günlük Ciro',
+                        value: CurrencyFormatter.format(summary.dailyRevenue),
+                        icon: Icons.payments_outlined,
+                        description: 'Bugünkü toplam tahsilat',
+                        accentColor: AppColors.success,
+                        masked: !financeLock.isUnlocked,
+                        onTap: financeLock.isUnlocked
+                            ? null
+                            : () => _handleUnlockTap(context, financeLock),
+                      ),
+                      SummaryCard(
+                        label: 'Aylık Ciro',
+                        value: CurrencyFormatter.format(summary.monthlyRevenue),
+                        icon: Icons.trending_up_rounded,
+                        description: 'Bu ayki toplam tahsilat',
+                        accentColor: AppColors.success,
+                        masked: !financeLock.isUnlocked,
+                        onTap: financeLock.isUnlocked
+                            ? null
+                            : () => _handleUnlockTap(context, financeLock),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppDimensions.spaceL),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final statusCard = StatusDistributionCard(
+                        receivedCount: summary.receivedCount,
+                        inProgressCount: summary.inProgressCount,
+                        readyCount: summary.readyCount,
+                      );
+                      final operationsCard = DailyOperationsCard(
+                        receivedToday: summary.receivedTodayCount,
+                        deliveredToday: summary.deliveredTodayCount,
+                      );
+
+                      if (constraints.maxWidth < _wideBreakpoint) {
+                        return Column(
+                          children: [
+                            statusCard,
+                            const SizedBox(height: AppDimensions.spaceM),
+                            operationsCard,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 3, child: statusCard),
+                          const SizedBox(width: AppDimensions.spaceM),
+                          Expanded(flex: 2, child: operationsCard),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: AppDimensions.spaceM),
+                  RevenueSummaryCard(
+                    dailyRevenue: summary.dailyRevenue,
+                    monthlyRevenue: summary.monthlyRevenue,
+                    masked: !financeLock.isUnlocked,
+                    onTap: financeLock.isUnlocked
+                        ? null
+                        : () => _handleUnlockTap(context, financeLock),
+                  ),
+                  const SizedBox(height: AppDimensions.spaceM),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final diskCard = DiskUsageCard(
+                        usageBytes: summary.diskUsageBytes,
+                        isWarning: state.isDiskWarning,
+                        onArchiveTap: () => context.go(AppRoutes.archive),
+                      );
+
+                      if (!state.hasOverdueReadyItems) {
+                        return diskCard;
+                      }
+
+                      final overdueCard = OverdueReadyCard(
+                        overdueCount: summary.readyWaitingOverdueCount,
+                        onTap: () =>
+                            context.go('${AppRoutes.workOrders}?status=READY'),
+                      );
+
+                      if (constraints.maxWidth < _wideBreakpoint) {
+                        return Column(
+                          children: [
+                            overdueCard,
+                            const SizedBox(height: AppDimensions.spaceM),
+                            diskCard,
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: overdueCard),
+                          const SizedBox(width: AppDimensions.spaceM),
+                          Expanded(child: diskCard),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             );
-          }
-          return const _DashboardSkeleton();
-        }
-
-        final isRefreshing = state.status == DashboardStatus.loading;
-
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DashboardHeader(
-                isRefreshing: isRefreshing,
-                lastUpdatedAt: state.lastUpdatedAt,
-                onRefresh: () => context.read<DashboardCubit>().load(),
-              ),
-              if (_isEmpty(summary)) ...[
-                const SizedBox(height: AppDimensions.spaceS),
-                const Text(
-                  'Henüz dashboard verisi bulunmuyor. İlk iş emriniz '
-                  'oluşturulduğunda burada görünmeye başlayacak.',
-                  style: TextStyle(color: AppColors.textMuted),
-                ),
-              ],
-              const SizedBox(height: AppDimensions.spaceL),
-              _KpiGroup(
-                title: 'İş Durumu',
-                cards: [
-                  SummaryCard(
-                    label: 'Teslim Alınan',
-                    count: summary.receivedCount,
-                    icon: Icons.inventory_2_outlined,
-                    description: 'Toplam açık iş',
-                    accentColor: AppColors.textMuted,
-                  ),
-                  SummaryCard(
-                    label: 'İşlemde',
-                    count: summary.inProgressCount,
-                    icon: Icons.settings_outlined,
-                    description: 'Aktif iş emri',
-                    accentColor: AppColors.primary,
-                  ),
-                  SummaryCard(
-                    label: 'Hazır',
-                    count: summary.readyCount,
-                    icon: Icons.check_circle_outline_rounded,
-                    description: 'Teslime hazır',
-                    accentColor: AppColors.warning,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-              _KpiGroup(
-                title: 'Bugün',
-                cards: [
-                  SummaryCard(
-                    label: 'Bugün Alınan',
-                    count: summary.receivedTodayCount,
-                    icon: Icons.login_rounded,
-                    description: 'Bugün teslim alınan',
-                    accentColor: AppColors.primary,
-                  ),
-                  SummaryCard(
-                    label: 'Bugün Teslim',
-                    count: summary.deliveredTodayCount,
-                    icon: Icons.logout_rounded,
-                    description: 'Bugün teslim edilen',
-                    accentColor: AppColors.success,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-              _KpiGroup(
-                title: 'Finans',
-                cards: [
-                  SummaryCard(
-                    label: 'Günlük Ciro',
-                    value: CurrencyFormatter.format(summary.dailyRevenue),
-                    icon: Icons.payments_outlined,
-                    description: 'Bugünkü toplam tahsilat',
-                    accentColor: AppColors.success,
-                  ),
-                  SummaryCard(
-                    label: 'Aylık Ciro',
-                    value: CurrencyFormatter.format(summary.monthlyRevenue),
-                    icon: Icons.trending_up_rounded,
-                    description: 'Bu ayki toplam tahsilat',
-                    accentColor: AppColors.success,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spaceL),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final statusCard = StatusDistributionCard(
-                    receivedCount: summary.receivedCount,
-                    inProgressCount: summary.inProgressCount,
-                    readyCount: summary.readyCount,
-                  );
-                  final operationsCard = DailyOperationsCard(
-                    receivedToday: summary.receivedTodayCount,
-                    deliveredToday: summary.deliveredTodayCount,
-                  );
-
-                  if (constraints.maxWidth < _wideBreakpoint) {
-                    return Column(
-                      children: [
-                        statusCard,
-                        const SizedBox(height: AppDimensions.spaceM),
-                        operationsCard,
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 3, child: statusCard),
-                      const SizedBox(width: AppDimensions.spaceM),
-                      Expanded(flex: 2, child: operationsCard),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-              RevenueSummaryCard(
-                dailyRevenue: summary.dailyRevenue,
-                monthlyRevenue: summary.monthlyRevenue,
-              ),
-              const SizedBox(height: AppDimensions.spaceM),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final diskCard = DiskUsageCard(
-                    usageBytes: summary.diskUsageBytes,
-                    isWarning: state.isDiskWarning,
-                    onArchiveTap: () => context.go(AppRoutes.archive),
-                  );
-
-                  if (!state.hasOverdueReadyItems) {
-                    return diskCard;
-                  }
-
-                  final overdueCard = OverdueReadyCard(
-                    overdueCount: summary.readyWaitingOverdueCount,
-                    onTap: () =>
-                        context.go('${AppRoutes.workOrders}?status=READY'),
-                  );
-
-                  if (constraints.maxWidth < _wideBreakpoint) {
-                    return Column(
-                      children: [
-                        overdueCard,
-                        const SizedBox(height: AppDimensions.spaceM),
-                        diskCard,
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: overdueCard),
-                      const SizedBox(width: AppDimensions.spaceM),
-                      Expanded(child: diskCard),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+          },
         );
       },
     );
