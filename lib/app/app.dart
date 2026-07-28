@@ -92,7 +92,7 @@ class _LeatherCareAppState extends State<LeatherCareApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'DoTiKa Admin',
+      title: 'DoTiKa',
       theme: AppTheme.light(),
       routerConfig: _router,
     );

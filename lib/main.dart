@@ -51,7 +51,7 @@ Future<void> main() async {
       center: true,
       backgroundColor: AppColors.background,
       skipTaskbar: false,
-      title: 'DoTiKa Admin',
+      title: 'DoTiKa',
     );
 
     await windowManager.waitUntilReadyToShow(
@@ -65,7 +65,7 @@ Future<void> main() async {
 
   await diagnosticsLogger.log(
     'INFO',
-    'DoTiKa Admin uygulaması başlatıldı.',
+    'DoTiKa uygulaması başlatıldı.',
   );
 
   runApp(const LeatherCareAdminApp());

@@ -54,6 +54,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   freezed: ^2.4.7
   json_serializable: ^6.7.1
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -61,3 +62,19 @@ flutter:
   # Gelecekte ekleyeceğimiz ikonlar veya yerel varlıklar için şimdiden hazır tutalım
   assets:
     - assets/
+
+# `dart run flutter_launcher_icons` ile üretilir — kaynak: assets/splash.png
+# (DoTiKa logosu). Yalnızca masaüstü (Windows/macOS) + Android; iOS talep
+# dışı bırakıldı.
+flutter_launcher_icons:
+  image_path: "assets/splash.png"
+  android: true
+  ios: false
+  min_sdk_android: 21
+  macos:
+    generate: true
+    image_path: "assets/splash.png"
+  windows:
+    generate: true
+    image_path: "assets/splash.png"
+    icon_size: 256
