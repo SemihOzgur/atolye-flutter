@@ -38,6 +38,9 @@ dependencies:
   media_kit_libs_video: ^1.0.7
   crypto: ^3.0.7
 
+  # --- Mobil Barkod Tarayıcı (F5) ---
+  mobile_scanner: ^7.1.2
+  permission_handler: ^12.0.1
   # --- Fiş Yazdırma (F4): Windows RAW spooler + LAN TCP 9100 ---
   win32: ^5.15.0
   ffi: ^2.2.0

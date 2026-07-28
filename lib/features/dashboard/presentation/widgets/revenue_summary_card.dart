@@ -69,7 +69,7 @@ class RevenueSummaryCard extends StatelessWidget {
       ),
     );
 
-    if (!masked || onTap == null) {
+    if (onTap == null) {
       return card;
     }
 

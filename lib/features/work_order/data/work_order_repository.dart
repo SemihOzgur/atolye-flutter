@@ -32,6 +32,11 @@ abstract class IWorkOrderRepository {
   Future<WorkOrderDto> deliver(int id, DeliverWorkOrderRequestDto request);
 
   Future<void> resendSms(int id);
+
+  /// Barkod çözümleme (F5): tam eşleşme; bulunamazsa null. Backend'de
+  /// kesin eşleşmeli bir uç (F7) yok — `search` (ILIKE kısmi eşleşme)
+  /// + tam eşleşme filtresi ile iki istekte çözülür.
+  Future<WorkOrderDto?> findByOrderNumber(String orderNumber);
 }
 
 class WorkOrderRepository implements IWorkOrderRepository {
@@ -151,5 +156,24 @@ class WorkOrderRepository implements IWorkOrderRepository {
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
+  }
+
+  @override
+  Future<WorkOrderDto?> findByOrderNumber(String orderNumber) async {
+    final normalized = orderNumber.trim().toUpperCase();
+    final page = await search(search: normalized, pageSize: 20);
+
+    WorkOrderListItemDto? match;
+    for (final item in page.items) {
+      if (item.orderNumber.toUpperCase() == normalized) {
+        match = item;
+        break;
+      }
+    }
+
+    if (match == null) {
+      return null;
+    }
+    return fetchDetail(match.id);
   }
 }

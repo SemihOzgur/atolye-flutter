@@ -293,6 +293,141 @@ void main() {
       throwsA(isA<ApiException>()),
     );
   });
+
+  group('findByOrderNumber (F5 barkod çözümleme)', () {
+    Map<String, dynamic> listItemJson({
+      required int id,
+      required String orderNumber,
+    }) {
+      return {
+        'id': id,
+        'orderNumber': orderNumber,
+        'customerFullName': 'Ayşe Yılmaz',
+        'customerPhone': '+905321234567',
+        'categoryPath': 'Kadın > Ayakkabı > Sneakers',
+        'brand': 'Nike',
+        'status': 'RECEIVED',
+        'price': 1550.0,
+        'remainingAmount': 1550.0,
+        'estimatedDeliveryDate': null,
+        'createdAt': '2026-01-01T10:00:00Z',
+      };
+    }
+
+    test('resolves via search + detail when a matching order number exists',
+        () async {
+      final adapter = _SequencedFakeAdapter([
+        (
+          statusCode: 200,
+          body: {
+            'items': [listItemJson(id: 1, orderNumber: 'WO-2026-000001')],
+            'page': 1,
+            'pageSize': 20,
+            'totalCount': 1,
+          },
+        ),
+        (statusCode: 200, body: _sampleWorkOrderJson()),
+      ]);
+      dio.httpClientAdapter = adapter;
+
+      final result = await repository.findByOrderNumber('WO-2026-000001');
+
+      expect(result, isNotNull);
+      expect(result!.orderNumber, 'WO-2026-000001');
+      expect(adapter.callCount, 2);
+    });
+
+    test(
+      'rejects a partial/ILIKE search result — only an exact match resolves',
+      () async {
+        final adapter = _SequencedFakeAdapter([
+          (
+            statusCode: 200,
+            body: {
+              // Backend ILIKE %term% kısmi eşleşme döndürebilir; tam
+              // eşleşmeyen bu satır istemcide elenmeli.
+              'items': [listItemJson(id: 5, orderNumber: 'WO-2026-0000123')],
+              'page': 1,
+              'pageSize': 20,
+              'totalCount': 1,
+            },
+          ),
+        ]);
+        dio.httpClientAdapter = adapter;
+
+        final result = await repository.findByOrderNumber('WO-2026-000012');
+
+        expect(result, isNull);
+        // Eşleşme bulunamadığı için detay ucu hiç çağrılmamalı.
+        expect(adapter.callCount, 1);
+      },
+    );
+
+    test('returns null when the search has no results', () async {
+      final adapter = _SequencedFakeAdapter([
+        (
+          statusCode: 200,
+          body: {'items': [], 'page': 1, 'pageSize': 20, 'totalCount': 0},
+        ),
+      ]);
+      dio.httpClientAdapter = adapter;
+
+      final result = await repository.findByOrderNumber('WO-2099-999999');
+
+      expect(result, isNull);
+    });
+
+    test('the match is case-insensitive on the order number', () async {
+      final adapter = _SequencedFakeAdapter([
+        (
+          statusCode: 200,
+          body: {
+            'items': [listItemJson(id: 1, orderNumber: 'WO-2026-000001')],
+            'page': 1,
+            'pageSize': 20,
+            'totalCount': 1,
+          },
+        ),
+        (statusCode: 200, body: _sampleWorkOrderJson()),
+      ]);
+      dio.httpClientAdapter = adapter;
+
+      final result = await repository.findByOrderNumber('wo-2026-000001');
+
+      expect(result, isNotNull);
+    });
+  });
+}
+
+/// Sırayla önceden tanımlanmış yanıtları döner — `findByOrderNumber` gibi
+/// ardışık iki istek atan (search + detail) akışları test etmek için.
+class _SequencedFakeAdapter implements HttpClientAdapter {
+  _SequencedFakeAdapter(this._responses);
+
+  final List<({int statusCode, dynamic body})> _responses;
+  int callCount = 0;
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final response = _responses[callCount];
+    callCount++;
+    final encoded =
+        utf8.encode(response.body == null ? '' : jsonEncode(response.body));
+    return ResponseBody.fromBytes(
+      encoded,
+      response.statusCode,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
+  }
 }
 
 class _FakeAdapter implements HttpClientAdapter {
