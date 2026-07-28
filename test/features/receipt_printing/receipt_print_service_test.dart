@@ -1,0 +1,210 @@
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:leather_care_admin/core/services/storage_service.dart';
+import 'package:leather_care_admin/features/customer/data/dto/customer_dto.dart';
+import 'package:leather_care_admin/features/receipt_printing/application/receipt_print_service.dart';
+import 'package:leather_care_admin/features/receipt_printing/data/printer/receipt_printer.dart';
+import 'package:leather_care_admin/features/work_order/data/dto/work_order_dto.dart';
+
+class _FakeSecureStorageService implements ISecureStorageService {
+  final Map<String, String> _values = {};
+
+  @override
+  Future<void> clearAll() async => _values.clear();
+
+  @override
+  Future<void> delete(String key) async => _values.remove(key);
+
+  @override
+  Future<String?> read(String key) async => _values[key];
+
+  @override
+  Future<void> write(String key, String value) async => _values[key] = value;
+}
+
+class _FakePrinter implements ReceiptPrinter {
+  List<String> printersToReturn = const [];
+  Object? exceptionToThrow;
+
+  String? lastTarget;
+  Uint8List? lastBytes;
+  int printCallCount = 0;
+
+  @override
+  Future<List<String>> listPrinters() async => printersToReturn;
+
+  @override
+  Future<void> printRaw(String target, Uint8List bytes) async {
+    printCallCount++;
+    lastTarget = target;
+    lastBytes = bytes;
+    if (exceptionToThrow != null) {
+      throw exceptionToThrow!;
+    }
+  }
+}
+
+WorkOrderDto _workOrder() {
+  return WorkOrderDto(
+    id: 1,
+    orderNumber: 'WO-2026-000123',
+    customer: CustomerDto(
+      id: 1,
+      firstName: 'Ayşe',
+      lastName: 'Yılmaz',
+      phone: '+905321234567',
+      iysConsentStatus: 'APPROVED',
+      createdAt: DateTime(2026, 1, 1),
+    ),
+    categoryId: 3,
+    categoryPath: 'Kadın > Ayakkabı > Sneakers',
+    suggestedPrice: 100,
+    price: 100,
+    hasPrepayment: false,
+    remainingAmount: 100,
+    status: 'RECEIVED',
+    socialMediaConsent: false,
+    trackingUrl: 'https://dotikadbm.com/t/abc',
+    createdAt: DateTime(2026, 7, 12),
+    updatedAt: DateTime(2026, 7, 12),
+  );
+}
+
+void main() {
+  late _FakeSecureStorageService storage;
+  late _FakePrinter rawPrinter;
+  late _FakePrinter networkPrinter;
+  late ReceiptPrintService service;
+
+  setUp(() {
+    storage = _FakeSecureStorageService();
+    rawPrinter = _FakePrinter();
+    networkPrinter = _FakePrinter();
+    service = ReceiptPrintService(
+      storage,
+      rawPrinter: rawPrinter,
+      networkPrinter: networkPrinter,
+    );
+  });
+
+  test('printWorkOrderReceipt fails clearly when no printer is selected', () async {
+    final result = await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(),
+    );
+
+    expect(result.success, isFalse);
+    expect(result.failureReason, contains('Yazıcı Ayarları'));
+    expect(rawPrinter.printCallCount, 0);
+  });
+
+  test('defaults to RAW mode and sends bytes to the raw printer', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.raw,
+      target: 'XP-Q807K',
+    );
+
+    final result = await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(),
+    );
+
+    expect(result.success, isTrue);
+    expect(rawPrinter.printCallCount, 1);
+    expect(rawPrinter.lastTarget, 'XP-Q807K');
+    expect(networkPrinter.printCallCount, 0);
+  });
+
+  test('network mode routes bytes to the network printer', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.network,
+      target: '192.168.1.50:9100',
+    );
+
+    final result = await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(),
+    );
+
+    expect(result.success, isTrue);
+    expect(networkPrinter.printCallCount, 1);
+    expect(networkPrinter.lastTarget, '192.168.1.50:9100');
+    expect(rawPrinter.printCallCount, 0);
+  });
+
+  test('printer selection persists across service instances (same storage)', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.network,
+      target: '192.168.1.50',
+    );
+
+    final anotherService = ReceiptPrintService(
+      storage,
+      rawPrinter: rawPrinter,
+      networkPrinter: networkPrinter,
+    );
+
+    expect(await anotherService.selectedTarget(), '192.168.1.50');
+    expect(
+      await anotherService.connectionMode(),
+      PrinterConnectionMode.network,
+    );
+  });
+
+  test('a printer exception surfaces as PrintResult.failure with its message', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.raw,
+      target: 'XP-Q807K',
+    );
+    rawPrinter.exceptionToThrow =
+        ReceiptPrinterException('Yazıcı kapalı veya bağlı değil.');
+
+    final result = await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(),
+    );
+
+    expect(result.success, isFalse);
+    expect(result.failureReason, 'Yazıcı kapalı veya bağlı değil.');
+  });
+
+  test('copies option is forwarded into the generated bytes (longer output)', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.raw,
+      target: 'XP-Q807K',
+    );
+
+    await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(copies: 1),
+    );
+    final singleCopyLength = rawPrinter.lastBytes!.length;
+
+    await service.printWorkOrderReceipt(
+      _workOrder(),
+      const PrintOptions(copies: 2),
+    );
+    final doubleCopyLength = rawPrinter.lastBytes!.length;
+
+    expect(doubleCopyLength, singleCopyLength * 2);
+  });
+
+  test('printTestReceipt sends a diagnostic receipt to the selected printer', () async {
+    await service.savePrinterSelection(
+      mode: PrinterConnectionMode.raw,
+      target: 'XP-Q807K',
+    );
+
+    final result = await service.printTestReceipt();
+
+    expect(result.success, isTrue);
+    expect(rawPrinter.printCallCount, 1);
+  });
+
+  test('listPrinters delegates to the raw printer implementation', () async {
+    rawPrinter.printersToReturn = ['XP-Q807K', 'Microsoft Print to PDF'];
+
+    expect(await service.listPrinters(), rawPrinter.printersToReturn);
+  });
+}
