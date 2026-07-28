@@ -76,4 +76,13 @@ class FakeWorkOrderRepository implements IWorkOrderRepository {
     lastResendId = id;
     if (exceptionToThrow != null) throw exceptionToThrow!;
   }
+
+  String? lastFindByOrderNumberQuery;
+
+  @override
+  Future<WorkOrderDto?> findByOrderNumber(String orderNumber) async {
+    lastFindByOrderNumberQuery = orderNumber;
+    if (exceptionToThrow != null) throw exceptionToThrow!;
+    return workOrderToReturn;
+  }
 }

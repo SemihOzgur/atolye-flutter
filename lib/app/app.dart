@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +11,7 @@ import '../core/services/storage_service.dart';
 import '../core/theme/app_theme.dart';
 import 'app_router.dart';
 import 'app_startup_controller.dart';
+import 'mobile/mobile_router.dart';
 
 class LeatherCareApp extends StatefulWidget {
   const LeatherCareApp({super.key, this.storageService});
@@ -36,7 +39,13 @@ class _LeatherCareAppState extends State<LeatherCareApp> {
       getIt.unregister<AppStartupController>();
     }
     getIt.registerSingleton<AppStartupController>(_startupController);
-    _router = buildAppRouter(_startupController, navigatorKey: _navigatorKey);
+    // Kabuk seçimi KESİNLİKLE platform ile yapılır — pencere boyutu
+    // (LayoutBuilder/MediaQuery) burada asla kullanılmaz.
+    final isMobilePlatform =
+        !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    _router = isMobilePlatform
+        ? buildMobileRouter(_startupController, navigatorKey: _navigatorKey)
+        : buildAppRouter(_startupController, navigatorKey: _navigatorKey);
     _sessionExpiredSubscription =
         AuthInterceptor.logoutStreamController.stream.listen((_) {
       _startupController.handleUnauthorized();

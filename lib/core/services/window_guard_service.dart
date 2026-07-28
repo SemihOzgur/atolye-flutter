@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:window_manager/window_manager.dart';
 
@@ -13,10 +14,16 @@ class WindowGuardService with WindowListener {
   bool _isAttached = false;
   DirtyCloseCallback? _onDirtyCloseRequested;
 
+  /// window_manager yalnızca masaüstünde (Windows/macOS) implemente
+  /// edilmiştir — mobilde "pencere kapatma" kavramı yok, çağrı
+  /// MissingPluginException fırlatır.
+  static bool get _isSupportedPlatform =>
+      Platform.isWindows || Platform.isMacOS;
+
   Future<void> initialize({DirtyCloseCallback? onDirtyCloseRequested}) async {
     _onDirtyCloseRequested = onDirtyCloseRequested;
 
-    if (_isAttached) {
+    if (!_isSupportedPlatform || _isAttached) {
       return;
     }
 

@@ -9,4 +9,8 @@ class AppRoutes {
   static const String catalog = '/catalog';
   static const String socialMedia = '/social-media';
   static const String archive = '/archive';
+
+  /// Mobil kabuk (F5) — masaüstü router'ında kullanılmaz.
+  static const String scanner = '/scanner';
+  static const String cameraPermission = '/scanner/permission';
 }

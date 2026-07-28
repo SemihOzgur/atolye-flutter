@@ -14,7 +14,12 @@ import 'core/theme/app_dimensions.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MediaKit.ensureInitialized();
+
+  // Video önizleme yalnızca masaüstü kabukta kullanılır; mobilde
+  // gereksiz yere APK/IPA boyutunu büyütmemek için atlanır.
+  if (Platform.isWindows || Platform.isMacOS) {
+    MediaKit.ensureInitialized();
+  }
 
   await setupLocator();
 

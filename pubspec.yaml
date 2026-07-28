@@ -38,6 +38,10 @@ dependencies:
   media_kit_libs_video: ^1.0.7
   crypto: ^3.0.7
 
+  # --- Mobil Barkod Tarayıcı (F5) ---
+  mobile_scanner: ^7.1.2
+  permission_handler: ^12.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
