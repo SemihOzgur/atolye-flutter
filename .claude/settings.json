@@ -13,7 +13,21 @@
       "Read(//Users/semih/.pub-cache/hosted/pub.dev/**)",
       "Bash(grep -n -B2 -A15 \"### \\\\`GET /api/customers\\\\`\" /Users/semih/AtolyeProje/atolye_flutter/docs/flutter-gelistirici-dokumantasyonu.md)",
       "Bash(grep -n \"api/customers\\\\`\" /Users/semih/AtolyeProje/atolye_flutter/docs/flutter-gelistirici-dokumantasyonu.md)",
-      "Bash(echo \"---exit $?---\")"
+      "Bash(echo \"---exit $?---\")",
+      "Bash(git commit -m ' *)",
+      "Bash(flutter create *)",
+      "Bash(git merge *)",
+      "Bash(find ~/.pub-cache -maxdepth 4 -iname \"flutter_launcher_icons-0.14*\" -type d 2>/dev/null | head -1)",
+      "Read(//Users/semih/.pub-cache/**)",
+      "Bash(cat /Users/semih/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4/flutter_launcher_icons.yaml 2>/dev/null | head -60)",
+      "Read(//Users/semih/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4/**)",
+      "Bash(find /Users/semih/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4 -iname \"*.yaml\" -o -iname \"README*\" | head -10)",
+      "Bash(grep -n \"flutter_icons\\\\|flutter_launcher_icons\" -A40 /Users/semih/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4/example/default_example/pubspec.yaml)",
+      "Read(//Users/semih/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.14.4/example/default_example/**)",
+      "Bash(git branch *)",
+      "Bash(python3 -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), sort_keys=True\\)\\)\")",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)"
     ],
     "additionalDirectories": [
       "/private/tmp"

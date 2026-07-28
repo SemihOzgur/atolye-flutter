@@ -105,6 +105,8 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<ReceiptPrintService>()) {
     getIt.registerLazySingleton<ReceiptPrintService>(
       () => ReceiptPrintService(getIt<ISecureStorageService>()),
+    );
+  }
   if (!getIt.isRegistered<FinanceLockController>()) {
     getIt.registerLazySingleton<FinanceLockController>(
       () => FinanceLockController(PinStore(getIt<ISecureStorageService>())),
