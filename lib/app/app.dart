@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/di/injection.dart';
 import '../core/network/auth_interceptor.dart';
 import '../core/services/storage_service.dart';
 import '../core/theme/app_theme.dart';
@@ -31,6 +32,10 @@ class _LeatherCareAppState extends State<LeatherCareApp> {
     super.initState();
     _storageService = widget.storageService ?? SecureStorageService();
     _startupController = AppStartupController(_storageService);
+    if (getIt.isRegistered<AppStartupController>()) {
+      getIt.unregister<AppStartupController>();
+    }
+    getIt.registerSingleton<AppStartupController>(_startupController);
     _router = buildAppRouter(_startupController, navigatorKey: _navigatorKey);
     _sessionExpiredSubscription =
         AuthInterceptor.logoutStreamController.stream.listen((_) {
@@ -67,6 +72,9 @@ class _LeatherCareAppState extends State<LeatherCareApp> {
   @override
   void dispose() {
     _sessionExpiredSubscription.cancel();
+    if (getIt.isRegistered<AppStartupController>()) {
+      getIt.unregister<AppStartupController>();
+    }
     _startupController.dispose();
     super.dispose();
   }
