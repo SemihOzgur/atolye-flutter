@@ -3,15 +3,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:leather_care_admin/app/app_routes.dart';
 import 'package:leather_care_admin/core/di/injection.dart';
-import 'package:leather_care_admin/core/theme/app_theme.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
+import 'package:leather_care_admin/core/security/finance_lock_controller.dart';
+import 'package:leather_care_admin/core/security/pin_store.dart';
+import 'package:leather_care_admin/core/services/storage_service.dart';
+import 'package:leather_care_admin/core/theme/app_theme.dart';
 import 'package:leather_care_admin/core/widgets/skeleton_box.dart';
 import 'package:leather_care_admin/features/dashboard/data/dashboard_repository.dart';
 import 'package:leather_care_admin/features/dashboard/data/dto/dashboard_summary_dto.dart';
 import 'package:leather_care_admin/features/dashboard/presentation/pages/dashboard_page.dart';
 
+class _FakeSecureStorageService implements ISecureStorageService {
+  final Map<String, String> _values = {};
+
+  @override
+  Future<void> clearAll() async => _values.clear();
+
+  @override
+  Future<void> delete(String key) async => _values.remove(key);
+
+  @override
+  Future<String?> read(String key) async => _values[key];
+
+  @override
+  Future<void> write(String key, String value) async => _values[key] = value;
+}
+
 void main() {
   late _FakeDashboardRepository fakeRepository;
+  late FinanceLockController financeLock;
 
   setUp(() {
     fakeRepository = _FakeDashboardRepository();
@@ -19,6 +39,14 @@ void main() {
       getIt.unregister<IDashboardRepository>();
     }
     getIt.registerLazySingleton<IDashboardRepository>(() => fakeRepository);
+
+    financeLock = FinanceLockController(
+      PinStore(_FakeSecureStorageService()),
+    );
+    if (getIt.isRegistered<FinanceLockController>()) {
+      getIt.unregister<FinanceLockController>();
+    }
+    getIt.registerSingleton<FinanceLockController>(financeLock);
   });
 
   tearDown(() async {
@@ -104,11 +132,123 @@ void main() {
     expect(find.text('Aylık Ciro'), findsOneWidget);
     // Appears both in the "Teslim Alınan" KPI card and the donut legend.
     expect(find.text('10'), findsNWidgets(2));
-    expect(find.textContaining('1.250,50'), findsWidgets);
+    // Finance is locked by default — the raw amount must not be shown.
+    expect(find.textContaining('1.250,50'), findsNothing);
 
     expect(find.text('İş Durumu Dağılımı'), findsOneWidget);
     expect(find.text('Bugünkü Operasyon'), findsOneWidget);
     expect(find.text('Finansal Özet'), findsOneWidget);
+  });
+
+  group('finance lock (F3)', () {
+    testWidgets('finance cards start masked on every app open', (
+      tester,
+    ) async {
+      fakeRepository.summaryToReturn = summaryWithWarnings;
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('1.250,50'), findsNothing);
+      expect(find.textContaining('34.500,00'), findsNothing);
+      expect(find.text('Göstermek için dokunun'), findsWidgets);
+    });
+
+    testWidgets(
+      'tapping a masked card without an existing PIN opens the setup dialog '
+      'and unlocks after a matching PIN + confirmation',
+      (tester) async {
+        fakeRepository.summaryToReturn = summaryWithWarnings;
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Günlük Ciro'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('PIN Belirle'), findsOneWidget);
+
+        await tester.enterText(find.widgetWithText(TextField, 'PIN'), '1234');
+        await tester.enterText(
+          find.widgetWithText(TextField, 'PIN (Tekrar)'),
+          '1234',
+        );
+        await tester.tap(find.text('Onayla'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1.250,50'), findsWidgets);
+        expect(await financeLock.hasPin(), isTrue);
+
+        // Cancel the pending 5-minute auto-lock timer so it doesn't leak
+        // past this fake-async test.
+        financeLock.lock();
+      },
+    );
+
+    testWidgets(
+      'an existing PIN opens the verify dialog; the correct PIN unlocks',
+      (tester) async {
+        await financeLock.setPinAndUnlock('1234');
+        financeLock.lock();
+        fakeRepository.summaryToReturn = summaryWithWarnings;
+
+        await tester.pumpWidget(buildSubject());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Günlük Ciro'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('PIN Gir'), findsOneWidget);
+
+        await tester.enterText(find.widgetWithText(TextField, 'PIN'), '1234');
+        await tester.tap(find.text('Onayla'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('1.250,50'), findsWidgets);
+
+        // Cancel the pending 5-minute auto-lock timer so it doesn't leak
+        // past this fake-async test.
+        financeLock.lock();
+      },
+    );
+
+    testWidgets('a wrong PIN shows an inline error and stays masked', (
+      tester,
+    ) async {
+      await financeLock.setPinAndUnlock('1234');
+      financeLock.lock();
+      fakeRepository.summaryToReturn = summaryWithWarnings;
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Günlük Ciro'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.widgetWithText(TextField, 'PIN'), '0000');
+      await tester.tap(find.text('Onayla'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Hatalı PIN (1/5)'), findsOneWidget);
+      expect(find.textContaining('1.250,50'), findsNothing);
+    });
+
+    testWidgets('unlocked cards re-mask automatically after 5 minutes', (
+      tester,
+    ) async {
+      await financeLock.setPinAndUnlock('1234');
+      fakeRepository.summaryToReturn = summaryWithWarnings;
+
+      await tester.pumpWidget(buildSubject());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('1.250,50'), findsWidgets);
+
+      await tester.pump(const Duration(minutes: 5));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('1.250,50'), findsNothing);
+      expect(find.text('Göstermek için dokunun'), findsWidgets);
+    });
   });
 
   testWidgets('shows the empty-state hint when every value is zero', (

@@ -12,6 +12,8 @@ import '../../features/media/data/media_repository.dart';
 import '../../features/social_media/data/social_media_repository.dart';
 import '../../features/work_order/data/work_order_repository.dart';
 import '../network/dio_client.dart';
+import '../security/finance_lock_controller.dart';
+import '../security/pin_store.dart';
 import '../services/diagnostics_logger.dart';
 import '../services/storage_service.dart';
 import '../services/window_guard_service.dart';
@@ -96,6 +98,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IBackupRepository>()) {
     getIt.registerLazySingleton<IBackupRepository>(
       () => BackupRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<FinanceLockController>()) {
+    getIt.registerLazySingleton<FinanceLockController>(
+      () => FinanceLockController(PinStore(getIt<ISecureStorageService>())),
     );
   }
 }

@@ -13,32 +13,67 @@ class RevenueSummaryCard extends StatelessWidget {
     super.key,
     required this.dailyRevenue,
     required this.monthlyRevenue,
+    this.masked = false,
+    this.onTap,
   });
 
   final double dailyRevenue;
   final double monthlyRevenue;
 
+  /// true iken grafik gizlenir; karta dokunmak [onTap]'i tetikler (PIN
+  /// akışı). Görsel bir maskedir; alttaki veri değişmez.
+  final bool masked;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final card = Card(
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Finansal Özet', style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Finansal Özet',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                if (masked)
+                  const Icon(
+                    Icons.lock_outline_rounded,
+                    size: 18,
+                    color: AppColors.textMuted,
+                  ),
+              ],
+            ),
             const SizedBox(height: AppDimensions.spaceM),
             SizedBox(
               height: 180,
-              child: _RevenueLineChart(
-                dailyRevenue: dailyRevenue,
-                monthlyRevenue: monthlyRevenue,
-              ),
+              child: masked
+                  ? const Center(
+                      child: Text(
+                        'Göstermek için dokunun',
+                        style: TextStyle(color: AppColors.textMuted),
+                      ),
+                    )
+                  : _RevenueLineChart(
+                      dailyRevenue: dailyRevenue,
+                      monthlyRevenue: monthlyRevenue,
+                    ),
             ),
           ],
         ),
       ),
     );
+
+    if (!masked || onTap == null) {
+      return card;
+    }
+
+    return InkWell(onTap: onTap, child: card);
   }
 }
 

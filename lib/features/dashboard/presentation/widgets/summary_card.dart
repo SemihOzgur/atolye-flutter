@@ -17,6 +17,8 @@ class SummaryCard extends StatelessWidget {
     this.icon,
     this.description,
     this.accentColor = AppColors.primary,
+    this.masked = false,
+    this.onTap,
   }) : assert(
           count != null || value != '',
           'Provide either count or value.',
@@ -29,9 +31,15 @@ class SummaryCard extends StatelessWidget {
   final String? description;
   final Color accentColor;
 
+  /// true iken değer maskelenir ve karta dokunmak [onTap]'i tetikler
+  /// (yalnızca Finans kartları için — PIN akışını açmak). Görsel bir
+  /// maskedir; alttaki veri/DTO değişmez.
+  final bool masked;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppDimensions.spaceL),
       decoration: BoxDecoration(
@@ -52,7 +60,13 @@ class SummaryCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (icon != null)
+              if (masked)
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 18,
+                  color: AppColors.textMuted,
+                )
+              else if (icon != null)
                 Container(
                   padding: const EdgeInsets.all(AppDimensions.spaceXs),
                   decoration: BoxDecoration(
@@ -69,14 +83,28 @@ class SummaryCard extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: count != null
-                ? _CountUpText(
-                    target: count!,
+            child: masked
+                ? Text(
+                    '•••••',
                     style: Theme.of(context).textTheme.displayLarge,
                   )
-                : Text(value, style: Theme.of(context).textTheme.displayLarge),
+                : count != null
+                    ? _CountUpText(
+                        target: count!,
+                        style: Theme.of(context).textTheme.displayLarge,
+                      )
+                    : Text(
+                        value,
+                        style: Theme.of(context).textTheme.displayLarge,
+                      ),
           ),
-          if (description != null) ...[
+          if (masked) ...[
+            const SizedBox(height: AppDimensions.spaceXxs),
+            const Text(
+              'Göstermek için dokunun',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+          ] else if (description != null) ...[
             const SizedBox(height: AppDimensions.spaceXxs),
             Text(
               description!,
@@ -86,6 +114,16 @@ class SummaryCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+
+    if (!masked || onTap == null) {
+      return card;
+    }
+
+    return InkWell(
+      borderRadius: AppDecorations.borderRadiusXl,
+      onTap: onTap,
+      child: card,
     );
   }
 }
