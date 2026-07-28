@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leather_care_admin/core/constants/storage_keys.dart';
 import 'package:leather_care_admin/core/di/injection.dart';
+import 'package:leather_care_admin/core/security/finance_lock_controller.dart';
+import 'package:leather_care_admin/core/security/pin_store.dart';
 import 'package:leather_care_admin/core/services/storage_service.dart';
 import 'package:leather_care_admin/features/auth/data/auth_repository.dart';
 import 'package:leather_care_admin/features/dashboard/data/dashboard_repository.dart';
@@ -20,6 +22,13 @@ void main() {
     }
     getIt.registerLazySingleton<IDashboardRepository>(
       _FakeDashboardRepository.new,
+    );
+
+    if (getIt.isRegistered<FinanceLockController>()) {
+      getIt.unregister<FinanceLockController>();
+    }
+    getIt.registerLazySingleton<FinanceLockController>(
+      () => FinanceLockController(PinStore(_FakeSecureStorageService())),
     );
   });
 

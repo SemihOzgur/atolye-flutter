@@ -50,6 +50,7 @@ class WorkOrderFormCubit extends Cubit<WorkOrderFormState> {
       state.copyWith(
         submitStatus: WorkOrderFormSubmitStatus.submitting,
         errorMessage: null,
+        fieldErrors: const <String, List<String>>{},
       ),
     );
 
@@ -82,6 +83,7 @@ class WorkOrderFormCubit extends Cubit<WorkOrderFormState> {
       state.copyWith(
         submitStatus: WorkOrderFormSubmitStatus.submitting,
         errorMessage: null,
+        fieldErrors: const <String, List<String>>{},
       ),
     );
 

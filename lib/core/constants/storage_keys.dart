@@ -8,4 +8,6 @@ class StorageKeys {
   static const String selectedPrinterName = 'selected_printer_name';
   static const String printerConnectionMode = 'printer_connection_mode';
   static const String printerNetworkAddress = 'printer_network_address';
+  static const String financePinHash = 'finance_pin_hash';
+  static const String financePinSalt = 'finance_pin_salt';
 }

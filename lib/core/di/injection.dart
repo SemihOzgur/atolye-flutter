@@ -13,6 +13,8 @@ import '../../features/receipt_printing/application/receipt_print_service.dart';
 import '../../features/social_media/data/social_media_repository.dart';
 import '../../features/work_order/data/work_order_repository.dart';
 import '../network/dio_client.dart';
+import '../security/finance_lock_controller.dart';
+import '../security/pin_store.dart';
 import '../services/diagnostics_logger.dart';
 import '../services/storage_service.dart';
 import '../services/window_guard_service.dart';
@@ -103,6 +105,9 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<ReceiptPrintService>()) {
     getIt.registerLazySingleton<ReceiptPrintService>(
       () => ReceiptPrintService(getIt<ISecureStorageService>()),
+  if (!getIt.isRegistered<FinanceLockController>()) {
+    getIt.registerLazySingleton<FinanceLockController>(
+      () => FinanceLockController(PinStore(getIt<ISecureStorageService>())),
     );
   }
 }
