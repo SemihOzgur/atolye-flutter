@@ -20,6 +20,7 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
         status: ServicePriceStatus.loading,
         selectedCategoryId: categoryId,
         selectedCategoryPath: categoryPath,
+        reloadStamp: state.reloadStamp,
       ),
     );
 
@@ -50,6 +51,9 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
           selectedCategoryId: categoryId,
           selectedCategoryPath: categoryPath,
           rows: rows,
+          // Sunucu değeriyle tazeleme sinyali: yeni kategori seçimi de bu
+          // sayaç değiştiği için PriceRowField controller'ını tazeler.
+          reloadStamp: state.reloadStamp + 1,
         ),
       );
     } on ApiException catch (e) {
@@ -58,6 +62,7 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
           status: ServicePriceStatus.error,
           selectedCategoryId: categoryId,
           selectedCategoryPath: categoryPath,
+          reloadStamp: state.reloadStamp,
           errorMessage: e.detail ?? e.message,
         ),
       );
@@ -78,6 +83,30 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
     );
   }
 
+  /// Bir satırın fiyat girdisi parse edilemediğinde/düzeldiğinde çağrılır.
+  /// `invalidRowIds` boş olmadıkça Kaydet devre dışı kalır.
+  void setRowValidity(int serviceTypeId, bool isValid) {
+    final invalidRowIds = Set<int>.of(state.invalidRowIds);
+    final changed = isValid
+        ? invalidRowIds.remove(serviceTypeId)
+        : invalidRowIds.add(serviceTypeId);
+    if (!changed) {
+      return;
+    }
+
+    emit(
+      ServicePriceState(
+        status: state.status,
+        selectedCategoryId: state.selectedCategoryId,
+        selectedCategoryPath: state.selectedCategoryPath,
+        rows: state.rows,
+        reloadStamp: state.reloadStamp,
+        invalidRowIds: invalidRowIds,
+        errorMessage: state.errorMessage,
+      ),
+    );
+  }
+
   void _replaceRow(
     int serviceTypeId,
     ServicePriceRow Function(ServicePriceRow row) transform,
@@ -93,13 +122,15 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
         selectedCategoryId: state.selectedCategoryId,
         selectedCategoryPath: state.selectedCategoryPath,
         rows: rows,
+        reloadStamp: state.reloadStamp,
+        invalidRowIds: state.invalidRowIds,
       ),
     );
   }
 
   Future<void> saveAll() async {
     final categoryId = state.selectedCategoryId;
-    if (categoryId == null) {
+    if (categoryId == null || !state.canSave) {
       return;
     }
 
@@ -112,6 +143,8 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
         selectedCategoryId: categoryId,
         selectedCategoryPath: state.selectedCategoryPath,
         rows: state.rows,
+        reloadStamp: state.reloadStamp,
+        invalidRowIds: state.invalidRowIds,
       ),
     );
 
@@ -137,6 +170,8 @@ class ServicePriceCubit extends Cubit<ServicePriceState> {
           selectedCategoryId: categoryId,
           selectedCategoryPath: state.selectedCategoryPath,
           rows: state.rows,
+          reloadStamp: state.reloadStamp,
+          invalidRowIds: state.invalidRowIds,
           errorMessage: e.detail ?? e.message,
         ),
       );
