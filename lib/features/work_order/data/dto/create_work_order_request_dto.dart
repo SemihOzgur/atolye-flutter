@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/utils/date_only_json.dart';
 import 'consumable_line_dto.dart';
 
 part 'create_work_order_request_dto.freezed.dart';
@@ -15,6 +16,8 @@ class CreateWorkOrderRequestDto with _$CreateWorkOrderRequestDto {
     String? material,
     String? description,
     String? existingDamages,
+    // ignore: invalid_annotation_target
+    @JsonKey(toJson: dateOnlyToJson, fromJson: dateOnlyFromJson)
     DateTime? estimatedDeliveryDate,
     @Default(<int>[]) List<int> servicePriceIds,
     @Default(<ConsumableLineDto>[]) List<ConsumableLineDto> consumables,
