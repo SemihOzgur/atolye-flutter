@@ -41,6 +41,9 @@ dependencies:
   # --- Mobil Barkod Tarayıcı (F5) ---
   mobile_scanner: ^7.1.2
   permission_handler: ^12.0.1
+
+  # --- Mobil Medya Çekim/Seçim (Product Create/Detail) ---
+  image_picker: ^1.1.2
   # --- Fiş Yazdırma (F4): Windows RAW spooler + LAN TCP 9100 ---
   win32: ^5.15.0
   ffi: ^2.2.0

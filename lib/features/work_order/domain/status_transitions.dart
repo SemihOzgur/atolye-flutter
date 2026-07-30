@@ -2,7 +2,9 @@
 /// kuralla birebir aynıdır (`WorkOrdersController.UpdateStatus`,
 /// `(order.Status, target)` switch ifadesi): RECEIVED→IN_PROGRESS,
 /// IN_PROGRESS→READY, READY→IN_PROGRESS, açık durumlardan→CANCELLED.
-/// DELIVERED yalnızca `/deliver` ucundan yapılır — mobilde hiç yok.
+/// DELIVERED bu PATCH matrisinde asla yer almaz — yalnızca `/deliver`
+/// ucundan yapılır (bkz. `MobileWorkOrderDetailPage._openDeliverDialog`,
+/// ayrı "Teslim Et" butonu, READY durumunda gösterilir).
 class StatusTransition {
   const StatusTransition({
     required this.target,

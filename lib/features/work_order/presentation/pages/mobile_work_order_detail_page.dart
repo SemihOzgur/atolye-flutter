@@ -10,7 +10,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/skeleton_box.dart';
+import '../../../media/presentation/widgets/mobile_media_section.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_detail_cubit.dart';
 import '../cubit/work_order_detail_state.dart';
@@ -19,10 +21,13 @@ import '../widgets/status_bottom_sheet.dart';
 import '../widgets/status_timeline.dart';
 import '../widgets/work_order_status_badge.dart';
 
-/// Mobil kabuk ürün detayı — read-only, tek yazma aksiyonu status
-/// değişimi. Mevcut [WorkOrderDetailCubit] yeniden kullanılır (409'da
-/// zaten otomatik `load()` çağırıyor — bkz. cubit). Fiyat/medya/SMS/
-/// Düzenle/Teslim Et bilinçli olarak yok (SDD F6 kapsamı).
+/// Mobil kabuk ürün detayı — çoğunlukla read-only; yazma aksiyonları status
+/// değişimi, medya (foto/video) ekleme ve teslim (Product Create/Detail
+/// kapsamı — SDD F6'nın "teslim yok" kararı, teslim akışının mobile
+/// taşınması onaylanarak bilinçli olarak genişletildi). Mevcut
+/// [WorkOrderDetailCubit] yeniden kullanılır (409'da zaten otomatik
+/// `load()` çağırıyor — bkz. cubit; `deliver()` de aynı cubit'te mevcuttu).
+/// Fiyat bloğu/SMS geçmişi/Düzenle hâlâ bilinçli olarak yok.
 class MobileWorkOrderDetailPage extends StatelessWidget {
   const MobileWorkOrderDetailPage({super.key, required this.workOrderId});
 
@@ -72,6 +77,74 @@ class _MobileWorkOrderDetailView extends StatelessWidget {
     );
   }
 
+  Future<void> _openDeliverDialog(
+    BuildContext context,
+    double remaining,
+  ) async {
+    final controller = TextEditingController(
+      text: remaining.toStringAsFixed(2),
+    );
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Teslim Et'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Kalan tutar: ${CurrencyFormatter.format(remaining)}'),
+            const SizedBox(height: AppDimensions.spaceM),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(labelText: 'Teslim Ödemesi'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            ),
+            const SizedBox(height: AppDimensions.spaceS),
+            const Text(
+              'Girilen tutar kaydedilir, ödeme politikası firma '
+              'sorumluluğundadır.',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Teslim Et'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final amount = double.tryParse(controller.text.replaceAll(',', '.'));
+    if (amount == null || amount < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Geçerli bir tutar girin.')),
+      );
+      return;
+    }
+
+    final cubit = context.read<WorkOrderDetailCubit>();
+    final error = await cubit.deliver(amount);
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    } else {
+      unawaited(HapticFeedback.mediumImpact());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +164,7 @@ class _MobileWorkOrderDetailView extends StatelessWidget {
 
           final workOrder = state.workOrder!;
           final transitions = allowedTransitions(workOrder.status);
+          final canDeliver = workOrder.status == 'READY';
 
           return Column(
             children: [
@@ -194,6 +268,31 @@ class _MobileWorkOrderDetailView extends StatelessWidget {
                               .toList(),
                         ),
                       ],
+                      if (workOrder.status == 'DELIVERED' &&
+                          workOrder.deliveredAt != null) ...[
+                        const SizedBox(height: AppDimensions.spaceM),
+                        _InfoCard(
+                          title: 'Teslim',
+                          children: [
+                            Text(
+                              'Teslim tarihi: '
+                              '${DateFormat('dd.MM.yyyy HH:mm').format(workOrder.deliveredAt!.toLocal())}',
+                            ),
+                            if (workOrder.finalPaymentAmount != null)
+                              Text(
+                                'Teslim ödemesi: '
+                                '${CurrencyFormatter.format(workOrder.finalPaymentAmount!)}',
+                              ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: AppDimensions.spaceL),
+                      MobileMediaSection(
+                        workOrderId: workOrder.id,
+                        isOrderOpen: workOrder.status == 'RECEIVED' ||
+                            workOrder.status == 'IN_PROGRESS' ||
+                            workOrder.status == 'READY',
+                      ),
                       if (workOrder.statusHistory.isNotEmpty) ...[
                         const SizedBox(height: AppDimensions.spaceL),
                         Text(
@@ -208,29 +307,51 @@ class _MobileWorkOrderDetailView extends StatelessWidget {
                   ),
                 ),
               ),
-              if (transitions.isNotEmpty)
+              if (transitions.isNotEmpty || canDeliver)
                 SafeArea(
                   top: false,
                   child: Padding(
                     padding: const EdgeInsets.all(AppDimensions.spaceL),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: state.isMutating
-                            ? null
-                            : () => _openStatusSheet(context, workOrder.status),
-                        child: state.isMutating
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.onPrimary,
-                                ),
-                              )
-                            : const Text('Durumu Değiştir'),
-                      ),
+                    child: Row(
+                      children: [
+                        if (transitions.isNotEmpty)
+                          Expanded(
+                            child: SizedBox(
+                              height: 56,
+                              child: OutlinedButton(
+                                onPressed: state.isMutating
+                                    ? null
+                                    : () => _openStatusSheet(
+                                        context, workOrder.status),
+                                child: const Text('Durumu Değiştir'),
+                              ),
+                            ),
+                          ),
+                        if (transitions.isNotEmpty && canDeliver)
+                          const SizedBox(width: AppDimensions.spaceM),
+                        if (canDeliver)
+                          Expanded(
+                            child: SizedBox(
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: state.isMutating
+                                    ? null
+                                    : () => _openDeliverDialog(
+                                        context, workOrder.remainingAmount),
+                                child: state.isMutating
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: AppColors.onPrimary,
+                                        ),
+                                      )
+                                    : const Text('Teslim Et'),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
