@@ -17,9 +17,14 @@ const _stageLabels = <String, String>{
 };
 
 class MediaGalleryView extends StatelessWidget {
-  const MediaGalleryView({super.key, required this.canDelete});
+  const MediaGalleryView({
+    super.key,
+    required this.canDelete,
+    this.crossAxisCount = 4,
+  });
 
   final bool canDelete;
+  final int crossAxisCount;
 
   Future<void> _confirmDelete(BuildContext context, MediaFileDto media) async {
     final confirmed = await showDialog<bool>(
@@ -59,6 +64,22 @@ class MediaGalleryView extends StatelessWidget {
           width: 640,
           height: 400,
           child: VideoPreviewPlayer(url: url),
+        ),
+      ),
+    );
+  }
+
+  void _openPhoto(
+    BuildContext context,
+    List<MediaFileDto> photos,
+    int initialIndex,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => _FullscreenPhotoViewer(
+          photos: photos,
+          initialIndex: initialIndex,
         ),
       ),
     );
@@ -105,6 +126,9 @@ class MediaGalleryView extends StatelessWidget {
                 child: TabBarView(
                   children: _stageTabs.map((stage) {
                     final items = state.forStage(stage);
+                    final photos = items
+                        .where((m) => m.mediaType != 'VIDEO')
+                        .toList();
                     if (items.isEmpty) {
                       return const Center(
                         child: Text(
@@ -116,8 +140,8 @@ class MediaGalleryView extends StatelessWidget {
                     return GridView.builder(
                       padding: const EdgeInsets.all(AppDimensions.spaceS),
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
                         mainAxisSpacing: AppDimensions.spaceS,
                         crossAxisSpacing: AppDimensions.spaceS,
                       ),
@@ -128,6 +152,10 @@ class MediaGalleryView extends StatelessWidget {
                           media: media,
                           canDelete: canDelete,
                           onTapVideo: () => _openVideo(context, media.viewUrl),
+                          onTapPhoto: media.mediaType == 'VIDEO'
+                              ? null
+                              : () => _openPhoto(
+                                  context, photos, photos.indexOf(media)),
                           onDelete: () => _confirmDelete(context, media),
                         );
                       },
@@ -170,12 +198,14 @@ class _MediaTile extends StatelessWidget {
     required this.media,
     required this.canDelete,
     required this.onTapVideo,
+    required this.onTapPhoto,
     required this.onDelete,
   });
 
   final MediaFileDto media;
   final bool canDelete;
   final VoidCallback onTapVideo;
+  final VoidCallback? onTapPhoto;
   final VoidCallback onDelete;
 
   @override
@@ -186,7 +216,7 @@ class _MediaTile extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         GestureDetector(
-          onTap: isVideo ? onTapVideo : null,
+          onTap: isVideo ? onTapVideo : onTapPhoto,
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
@@ -226,6 +256,70 @@ class _MediaTile extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Tam ekran fotoğraf önizleme — masaüstünde de mobilde de eksik olan
+/// (Analiz §2.3/§8.2/§9.3) bir davranışı kapatır: fotoğrafa dokununca hiçbir
+/// şey olmaması. Aynı stage'deki diğer fotoğraflar arasında kaydırılabilir;
+/// pinch-to-zoom için `InteractiveViewer` kullanılır (yeni bağımlılık yok).
+class _FullscreenPhotoViewer extends StatefulWidget {
+  const _FullscreenPhotoViewer({
+    required this.photos,
+    required this.initialIndex,
+  });
+
+  final List<MediaFileDto> photos;
+  final int initialIndex;
+
+  @override
+  State<_FullscreenPhotoViewer> createState() =>
+      _FullscreenPhotoViewerState();
+}
+
+class _FullscreenPhotoViewerState extends State<_FullscreenPhotoViewer> {
+  late final PageController _controller =
+      PageController(initialPage: widget.initialIndex);
+  late int _currentIndex = widget.initialIndex;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_currentIndex + 1} / ${widget.photos.length}'),
+      ),
+      body: PageView.builder(
+        controller: _controller,
+        itemCount: widget.photos.length,
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 1,
+            maxScale: 4,
+            child: Center(
+              child: Image.network(
+                widget.photos[index].viewUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.broken_image_outlined,
+                  color: Colors.white54,
+                  size: 48,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
