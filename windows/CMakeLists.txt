@@ -32,6 +32,14 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Some plugins (e.g. permission_handler_windows) still use the deprecated
+# <experimental/coroutine> header for WinRT calls. Newer MSVC/STL versions
+# turn this into a hard compile error instead of a warning; silence it here
+# so builds on updated toolchains (e.g. GitHub Actions windows-latest) don't
+# break. This must be defined before add_subdirectory(flutter) so plugin
+# targets (added afterward via generated_plugins.cmake) inherit it.
+add_definitions(-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
