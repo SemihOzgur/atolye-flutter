@@ -49,6 +49,12 @@ class MobileShell extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            tooltip: 'Ürünler',
+            icon: const Icon(Icons.inventory_2_outlined),
+            onPressed: () => context.push(AppRoutes.workOrders),
+            color: AppColors.textMuted,
+          ),
+          IconButton(
             tooltip: 'Çıkış Yap',
             icon: const Icon(Icons.logout_rounded),
             onPressed: onLogout,
