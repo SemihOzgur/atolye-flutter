@@ -27,7 +27,8 @@
       "Bash(git branch *)",
       "Bash(python3 -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), sort_keys=True\\)\\)\")",
       "Bash(gh auth *)",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(python3 -)"
     ],
     "additionalDirectories": [
       "/private/tmp"
