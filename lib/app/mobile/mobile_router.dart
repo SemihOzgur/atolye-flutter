@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/customer/presentation/pages/mobile_customer_detail_page.dart';
+import '../../features/customer/presentation/pages/mobile_customer_search_page.dart';
 import '../../features/dashboard/presentation/pages/mobile_dashboard_page.dart';
 import '../../features/scanner/presentation/pages/camera_permission_page.dart';
 import '../../features/scanner/presentation/pages/scanner_page.dart';
 import '../../features/work_order/presentation/pages/mobile_work_order_detail_page.dart';
+import '../../features/work_order/presentation/pages/mobile_work_order_form_page.dart';
+import '../../features/work_order/presentation/pages/mobile_work_order_list_page.dart';
 import '../app_routes.dart';
 import '../app_startup_controller.dart';
 import '../splash_page.dart';
 import 'mobile_shell.dart';
 
-/// Mobil kabuk router'ı: yalnızca Dashboard + tarayıcı→detay akışı.
-/// Masaüstü `buildAppRouter`'daki katalog/müşteri/arşiv rotaları
-/// bilinçli olarak yok (SDD F5 kapsamı — mobilde teslim/düzenleme yok).
+/// Mobil kabuk router'ı: Dashboard, tarayıcı→detay akışı ve Product
+/// Create/Detail (ürünler listesi, müşteri seçimi, ürün oluşturma).
+/// Masaüstü `buildAppRouter`'daki katalog/arşiv rotaları ve ürün
+/// düzenleme/teslim bilinçli olarak yok (SDD F6 kapsamı korunuyor).
 GoRouter buildMobileRouter(
   AppStartupController startupController, {
   GlobalKey<NavigatorState>? navigatorKey,
@@ -51,6 +56,27 @@ GoRouter buildMobileRouter(
       GoRoute(
         path: AppRoutes.scanner,
         builder: (context, state) => const ScannerPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.workOrders,
+        builder: (context, state) => const MobileWorkOrderListPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.customers,
+        builder: (context, state) => const MobileCustomerSearchPage(),
+      ),
+      GoRoute(
+        path: '${AppRoutes.customers}/:id',
+        builder: (context, state) => MobileCustomerDetailPage(
+          customerId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.workOrders}/new',
+        builder: (context, state) => MobileWorkOrderFormPage(
+          customerId:
+              int.parse(state.uri.queryParameters['customerId']!),
+        ),
       ),
       GoRoute(
         path: '${AppRoutes.workOrders}/:id',
