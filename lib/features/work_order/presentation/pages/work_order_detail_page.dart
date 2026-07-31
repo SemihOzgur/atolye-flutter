@@ -216,6 +216,7 @@ class _WorkOrderDetailView extends StatelessWidget {
                   WorkOrderStatusBadge(status: workOrder.status),
                   const Spacer(),
                   PrintReceiptAction(workOrder: workOrder),
+                  const PrinterSettingsAction(),
                   IconButton(
                     tooltip: 'Linki kopyala',
                     icon: const Icon(Icons.link_rounded),

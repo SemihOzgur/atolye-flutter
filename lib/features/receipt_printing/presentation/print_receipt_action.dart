@@ -70,6 +70,29 @@ class PrintReceiptAction extends StatelessWidget {
   }
 }
 
+/// "Fiş Bas"ın yanına eklenen ayrı bir giriş noktası — [PrinterSettingsDialog]
+/// önceden yalnızca hiç yazıcı seçilmemişken veya bir yazdırma başarısız
+/// olduğunda açılıyordu; yazıcı seçiliyken ve yazdırma "başarılı" sayılıyorken
+/// (bytes yazıcıya gitti, Win32/soket hatası yok — çıktı boş olsa bile)
+/// ayarlara dönecek bir yol yoktu. Yalnızca Windows'ta görünür.
+class PrinterSettingsAction extends StatelessWidget {
+  const PrinterSettingsAction({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Platform.isWindows) {
+      return const SizedBox.shrink();
+    }
+
+    return IconButton(
+      tooltip: 'Yazıcı Ayarları',
+      icon: const Icon(Icons.settings_outlined),
+      onPressed: () =>
+          PrinterSettingsDialog.show(context, getIt<ReceiptPrintService>()),
+    );
+  }
+}
+
 class _PrintPreviewDialog extends StatefulWidget {
   const _PrintPreviewDialog();
 
