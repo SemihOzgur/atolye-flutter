@@ -25,6 +25,12 @@ class Cp857Encoder {
 
   static int get turkishCharacterCount => _turkishChars.length;
 
+  /// Türkçe karakterlere atanan ham CP857 byte değerleri, sırayla
+  /// ç,Ç,ğ,Ğ,ı,İ,ö,Ö,ş,Ş,ü,Ü — kod sayfası tanı testi için (bkz.
+  /// `EscPosBuilder.buildCodepageDiagnostic`).
+  static Uint8List get turkishByteValues =>
+      Uint8List.fromList(_turkishChars.values.toList());
+
   Uint8List encode(String text) {
     final bytes = Uint8List(text.length);
     for (var i = 0; i < text.length; i++) {

@@ -100,7 +100,12 @@ class ReceiptPrintService {
       printedAt: now,
     );
     final bytes = _escPosBuilder.build(data);
-    return _sendToSelectedPrinter(bytes);
+    // GEÇİCİ: kod sayfası tanı bloğu test fişine ekleniyor (bkz.
+    // EscPosBuilder.buildCodepageDiagnostic) — doğru numara bulununca
+    // kaldırılacak.
+    final diagnostic = _escPosBuilder.buildCodepageDiagnostic();
+    final combined = Uint8List.fromList([...bytes, ...diagnostic]);
+    return _sendToSelectedPrinter(combined);
   }
 
   Future<PrintResult> _sendToSelectedPrinter(Uint8List bytes) async {

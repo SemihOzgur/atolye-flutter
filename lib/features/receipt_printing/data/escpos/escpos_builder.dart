@@ -37,6 +37,32 @@ class EscPosBuilder {
     return out.toBytes();
   }
 
+  /// GEÇİCİ TANI ARACI (F4-QA1): `ESC t 0x12`'nin bu yazıcıda gerçekten
+  /// CP857 olup olmadığı sahada doğrulanmadı. Her aday kod sayfası
+  /// numarası için ESC/POS baytlarını [Cp857Encoder]'ın Türkçe karakterlere
+  /// atadığı ham byte değerleriyle basar; hangi "n=" satırında Türkçe
+  /// karakterler (çÇğĞıİöÖşŞüÜ) doğru görünüyorsa doğru kod sayfası odur.
+  /// Doğru numara bulununca `_selectCp857` sabitine yazılıp bu metot
+  /// kaldırılmalıdır.
+  Uint8List buildCodepageDiagnostic() {
+    const candidates = [0, 2, 3, 4, 5, 6, 16, 17, 18, 19, 20, 21, 22, 32, 36];
+    final turkishBytes = Cp857Encoder.turkishByteValues;
+
+    final out = BytesBuilder();
+    out.add(_init);
+    out.add(_line('--- KOD SAYFASI TESTI ---'));
+    out.add(_line('cCgGiIoOsSuU (referans, ASCII)'));
+    for (final n in candidates) {
+      out.add([0x1B, 0x74, n]); // ESC t n
+      out.add('n=$n: '.codeUnits);
+      out.add(turkishBytes);
+      out.add([0x0A]);
+    }
+    out.add(_feed(3));
+    out.add(_cut);
+    return out.toBytes();
+  }
+
   Uint8List _buildSingleCopy(
     ReceiptData data, {
     required bool includeTrackingQr,
