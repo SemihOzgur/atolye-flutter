@@ -9,9 +9,11 @@ import 'cp857_encoder.dart';
 ///
 /// Barkod komut baytları (`GS h 100`, `GS w 2`, `GS H 2`, `GS k 73`) ve
 /// hizalama/boyut komutları SDD'de birebir verilmiştir. CP857 sayfa
-/// numarası (`ESC t 13`, Epson standardında PC857) ve QR modül/hata-düzeltme
-/// parametreleri yaygın ESC/POS varsayılanlarıdır — sahada farklı davranan
-/// bir yazıcı çıkarsa `buildCodepageDiagnostic()` ile yeniden doğrulanabilir.
+/// numarası (`ESC t 57`) yazıcının kendi self-test çıktısında PC857 olarak
+/// listelenen değer kullanılarak sahada doğrulanmıştır (bkz. F4-QA1). QR
+/// modül/hata-düzeltme parametreleri yaygın ESC/POS varsayılanlarıdır —
+/// farklı davranan bir yazıcı çıkarsa `buildCodepageDiagnostic()` ile
+/// yeniden doğrulanabilir.
 class EscPosBuilder {
   const EscPosBuilder({
     this.cp857Encoder = const Cp857Encoder(),
@@ -22,7 +24,7 @@ class EscPosBuilder {
   final int columnWidth;
 
   static const List<int> _init = [0x1B, 0x40]; // ESC @
-  static const List<int> _selectCp857 = [0x1B, 0x74, 0x0D]; // ESC t 13 (PC857)
+  static const List<int> _selectCp857 = [0x1B, 0x74, 0x39]; // ESC t 57 (PC857, printer self-test)
   static const List<int> _cut = [0x1D, 0x56, 0x42, 0x00]; // GS V 66 0
 
   Uint8List build(
@@ -37,16 +39,16 @@ class EscPosBuilder {
     return out.toBytes();
   }
 
-  /// GEÇİCİ TANI ARACI (F4-QA1): `ESC t 0x12`'nin bu yazıcıda gerçekten
-  /// CP857 olup olmadığı sahada doğrulanmadı. Her aday kod sayfası
-  /// numarası için ESC/POS baytlarını [Cp857Encoder]'ın Türkçe karakterlere
-  /// atadığı ham byte değerleriyle basar; hangi "n=" satırında Türkçe
-  /// karakterler (çÇğĞıİöÖşŞüÜ) doğru görünüyorsa doğru kod sayfası odur.
-  /// Doğru numara bulununca `_selectCp857` sabitine yazılıp bu metot
-  /// kaldırılmalıdır.
+  /// TANI ARACI (F4-QA1): `_selectCp857`'nin bu yazıcıda doğru CP857
+  /// bastığı sahada doğrulanmıştır (ESC t 57). Farklı bir yazıcı modeline
+  /// geçilirse veya Türkçe karakterler tekrar bozuk basarsa, bu metot her
+  /// aday kod sayfası numarası için ESC/POS baytlarını [Cp857Encoder]'ın
+  /// Türkçe karakterlere atadığı ham byte değerleriyle basar; hangi "n="
+  /// satırında Türkçe karakterler (çÇğĞıİöÖşŞüÜ) doğru görünüyorsa doğru
+  /// kod sayfası odur.
   Uint8List buildCodepageDiagnostic() {
     const candidates = [
-      0, 2, 3, 4, 5, 6, 13, 16, 17, 18, 19, 20, 21, 22, 32, 36,
+      0, 2, 3, 4, 5, 6, 13, 16, 17, 18, 19, 20, 21, 22, 32, 36, 57,
     ];
     final turkishBytes = Cp857Encoder.turkishByteValues;
 

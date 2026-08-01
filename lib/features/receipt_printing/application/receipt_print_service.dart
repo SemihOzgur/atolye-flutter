@@ -100,9 +100,9 @@ class ReceiptPrintService {
       printedAt: now,
     );
     final bytes = _escPosBuilder.build(data);
-    // GEÇİCİ: kod sayfası tanı bloğu test fişine ekleniyor (bkz.
-    // EscPosBuilder.buildCodepageDiagnostic) — doğru numara bulununca
-    // kaldırılacak.
+    // GEÇİCİ: n=57 ("PC3846") satırının gerçekten CP857 byte'larını doğru
+    // bastığı sahada teyit edilene kadar tanı bloğu ekleniyor (bkz.
+    // EscPosBuilder.buildCodepageDiagnostic). Teyit sonrası kaldırılacak.
     final diagnostic = _escPosBuilder.buildCodepageDiagnostic();
     final combined = Uint8List.fromList([...bytes, ...diagnostic]);
     return _sendToSelectedPrinter(combined);
