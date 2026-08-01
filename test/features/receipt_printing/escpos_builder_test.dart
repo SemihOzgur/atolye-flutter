@@ -45,11 +45,11 @@ void main() {
     printedAt: DateTime(2026, 7, 12, 10, 31),
   );
 
-  test('starts with init (ESC @) and CP857 selection (ESC t 18)', () {
+  test('starts with init (ESC @) and CP857 selection (ESC t 13)', () {
     final bytes = builder.build(baseData);
 
     expect(bytes.sublist(0, 2), [0x1B, 0x40]);
-    expect(bytes.sublist(2, 5), [0x1B, 0x74, 0x12]);
+    expect(bytes.sublist(2, 5), [0x1B, 0x74, 0x0D]);
   });
 
   test('embeds the order number as Code128 barcode payload ({B prefix)', () {

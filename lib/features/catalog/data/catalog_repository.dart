@@ -221,7 +221,7 @@ class CatalogRepository implements ICatalogRepository {
         },
       );
 
-      return response.data!
+      return (response.data ?? const <dynamic>[])
           .map((item) => ServicePriceDto.fromJson(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
@@ -239,7 +239,7 @@ class CatalogRepository implements ICatalogRepository {
         data: BulkUpsertServicePricesRequestDto(items: items).toJson(),
       );
 
-      return response.data!
+      return (response.data ?? const <dynamic>[])
           .map((item) => ServicePriceDto.fromJson(item as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {

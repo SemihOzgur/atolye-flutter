@@ -9,9 +9,9 @@ import 'cp857_encoder.dart';
 ///
 /// Barkod komut baytları (`GS h 100`, `GS w 2`, `GS H 2`, `GS k 73`) ve
 /// hizalama/boyut komutları SDD'de birebir verilmiştir. CP857 sayfa
-/// numarası (`ESC t 0x12`) ve QR modül/hata-düzeltme parametreleri
-/// yaygın ESC/POS varsayılanlarıdır — **gerçek XP-Q807K'da doğrulanmalı**
-/// (bkz. F4-QA1).
+/// numarası (`ESC t 13`, Epson standardında PC857) ve QR modül/hata-düzeltme
+/// parametreleri yaygın ESC/POS varsayılanlarıdır — sahada farklı davranan
+/// bir yazıcı çıkarsa `buildCodepageDiagnostic()` ile yeniden doğrulanabilir.
 class EscPosBuilder {
   const EscPosBuilder({
     this.cp857Encoder = const Cp857Encoder(),
@@ -22,7 +22,7 @@ class EscPosBuilder {
   final int columnWidth;
 
   static const List<int> _init = [0x1B, 0x40]; // ESC @
-  static const List<int> _selectCp857 = [0x1B, 0x74, 0x12]; // ESC t 18
+  static const List<int> _selectCp857 = [0x1B, 0x74, 0x0D]; // ESC t 13 (PC857)
   static const List<int> _cut = [0x1D, 0x56, 0x42, 0x00]; // GS V 66 0
 
   Uint8List build(
@@ -45,7 +45,9 @@ class EscPosBuilder {
   /// Doğru numara bulununca `_selectCp857` sabitine yazılıp bu metot
   /// kaldırılmalıdır.
   Uint8List buildCodepageDiagnostic() {
-    const candidates = [0, 2, 3, 4, 5, 6, 16, 17, 18, 19, 20, 21, 22, 32, 36];
+    const candidates = [
+      0, 2, 3, 4, 5, 6, 13, 16, 17, 18, 19, 20, 21, 22, 32, 36,
+    ];
     final turkishBytes = Cp857Encoder.turkishByteValues;
 
     final out = BytesBuilder();

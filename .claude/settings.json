@@ -28,7 +28,9 @@
       "Bash(python3 -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), sort_keys=True\\)\\)\")",
       "Bash(gh auth *)",
       "Bash(gh repo *)",
-      "Bash(python3 -)"
+      "Bash(python3 -)",
+      "Bash(dart analyze *)",
+      "Bash(flutter clean *)"
     ],
     "additionalDirectories": [
       "/private/tmp"

@@ -2,9 +2,9 @@ import 'dart:typed_data';
 
 /// UTF-8 (Dart String) → CP857 (Türkçe DOS kod sayfası) byte dönüşümü.
 ///
-/// Yazıcıya `ESC t 0x12` (CP857 seç) komutundan sonra gönderilecek metin
-/// bu kod sayfasında olmalıdır — XP-Q807K'nin CP857 sayfa numarası sahada
-/// doğrulanmalı (bkz. F4-QA1). Tablo dışı karakter '?' ile değiştirilir.
+/// Yazıcıya `ESC t 13` (Epson standardında CP857/PC857 seçimi) komutundan
+/// sonra gönderilecek metin bu kod sayfasında olmalıdır. Tablo dışı karakter
+/// '?' ile değiştirilir.
 class Cp857Encoder {
   const Cp857Encoder();
 
