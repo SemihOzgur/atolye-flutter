@@ -1,12 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leather_care_admin/features/customer/data/dto/customer_dto.dart';
 import 'package:leather_care_admin/features/receipt_printing/domain/receipt_data.dart';
+import 'package:leather_care_admin/features/work_order/data/dto/work_order_consumable_item_dto.dart';
 import 'package:leather_care_admin/features/work_order/data/dto/work_order_dto.dart';
+import 'package:leather_care_admin/features/work_order/data/dto/work_order_service_item_dto.dart';
 
 WorkOrderDto _baseWorkOrder({
   String phone = '+905321234567',
   String? brand,
   String status = 'RECEIVED',
+  List<WorkOrderServiceItemDto> services = const [],
+  List<WorkOrderConsumableItemDto> consumables = const [],
+  double price = 100,
+  bool hasPrepayment = false,
+  double? prepaymentAmount,
+  double remainingAmount = 100,
 }) {
   return WorkOrderDto(
     id: 1,
@@ -22,10 +30,13 @@ WorkOrderDto _baseWorkOrder({
     categoryId: 3,
     categoryPath: 'Kadın > Ayakkabı > Sneakers',
     brand: brand,
-    suggestedPrice: 100,
-    price: 100,
-    hasPrepayment: false,
-    remainingAmount: 100,
+    services: services,
+    consumables: consumables,
+    suggestedPrice: price,
+    price: price,
+    hasPrepayment: hasPrepayment,
+    prepaymentAmount: prepaymentAmount,
+    remainingAmount: remainingAmount,
     status: status,
     socialMediaConsent: false,
     trackingUrl: 'https://dotikadbm.com/t/abc',
@@ -94,6 +105,70 @@ void main() {
       );
 
       expect(data.customerName, 'Ayşe Yılmaz');
+    });
+
+    test('maps service and consumable names, defaulting to empty lists', () {
+      final withoutLines = ReceiptData.fromWorkOrder(
+        _baseWorkOrder(),
+        maskPhone: false,
+        printedAt: DateTime(2026, 7, 12),
+      );
+      expect(withoutLines.serviceNames, isEmpty);
+      expect(withoutLines.consumableNames, isEmpty);
+
+      final withLines = ReceiptData.fromWorkOrder(
+        _baseWorkOrder(
+          services: const [
+            WorkOrderServiceItemDto(serviceName: 'Boyama', priceSnapshot: 200),
+          ],
+          consumables: const [
+            WorkOrderConsumableItemDto(
+              consumableProductId: 1,
+              productName: 'Deri Boya',
+              quantity: 1,
+              unitPriceSnapshot: 50,
+              lineTotal: 50,
+            ),
+          ],
+        ),
+        maskPhone: false,
+        printedAt: DateTime(2026, 7, 12),
+      );
+      expect(withLines.serviceNames, ['Boyama']);
+      expect(withLines.consumableNames, ['Deri Boya']);
+    });
+
+    test('totalPrice mirrors price and remainingAmount mirrors server value',
+        () {
+      final data = ReceiptData.fromWorkOrder(
+        _baseWorkOrder(price: 2400, remainingAmount: 1900),
+        maskPhone: false,
+        printedAt: DateTime(2026, 7, 12),
+      );
+
+      expect(data.totalPrice, 2400);
+      expect(data.remainingAmount, 1900);
+    });
+
+    test('prepaymentAmount is null when hasPrepayment is false, even if '
+        'the DTO carries a stale value', () {
+      final data = ReceiptData.fromWorkOrder(
+        _baseWorkOrder(hasPrepayment: false, prepaymentAmount: null),
+        maskPhone: false,
+        printedAt: DateTime(2026, 7, 12),
+      );
+
+      expect(data.prepaymentAmount, isNull);
+    });
+
+    test('prepaymentAmount is carried when hasPrepayment is true', () {
+      final data = ReceiptData.fromWorkOrder(
+        _baseWorkOrder(hasPrepayment: true, prepaymentAmount: 500),
+        maskPhone: false,
+        printedAt: DateTime(2026, 7, 12),
+      );
+
+      expect(data.prepaymentAmount, 500);
     });
   });
 

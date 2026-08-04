@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/receipt_data.dart';
 import 'cp857_encoder.dart';
 
@@ -99,13 +100,25 @@ class EscPosBuilder {
     if (data.color != null) out.add(_line('Renk: ${data.color}'));
     if (data.material != null) out.add(_line('Malzeme: ${data.material}'));
 
-    // 6. Arıza / açıklama — 48 sütuna sarmalanır
-    final damageText = [data.description, data.existingDamages]
-        .whereType<String>()
-        .where((s) => s.trim().isNotEmpty)
-        .join(' / ');
-    for (final line in _wrap(damageText)) {
-      out.add(_line(line));
+    // 6a. Açıklama (ayrı başlık, yalnızca doluysa)
+    if (data.description != null && data.description!.trim().isNotEmpty) {
+      out.add(_textBlock('Açıklama', data.description!));
+    }
+
+    // 6b. Detay (existingDamages, ayrı başlık, yalnızca doluysa)
+    if (data.existingDamages != null &&
+        data.existingDamages!.trim().isNotEmpty) {
+      out.add(_textBlock('Detay', data.existingDamages!));
+    }
+
+    // 6c. Yapılan işlemler (yalnızca hizmet seçildiyse)
+    if (data.serviceNames.isNotEmpty) {
+      out.add(_listBlock('Yapılan İşlemler', data.serviceNames));
+    }
+
+    // 6d. Sarf malzemeleri (yalnızca sarf malzemesi kullanıldıysa)
+    if (data.consumableNames.isNotEmpty) {
+      out.add(_listBlock('Sarf Malzemeleri', data.consumableNames));
     }
 
     // 7. Kabul / tahmini teslim / durum / basım zamanı
@@ -117,6 +130,10 @@ class EscPosBuilder {
     }
     out.add(_line('Durum: ${data.statusLabel}'));
     out.add(_line('Basim: ${_formatDateTime(data.printedAt)}'));
+
+    // 7b. Ödeme özeti — toplam / (varsa) ön ödeme / kalan tutar
+    out.add(_feed(1));
+    out.add(_paymentSummary(data));
 
     // 8. Takip QR (opsiyonel)
     if (includeTrackingQr && data.trackingUrl != null) {
@@ -131,6 +148,50 @@ class EscPosBuilder {
     out.add(_cut);
 
     return out.toBytes();
+  }
+
+  /// Başlık + serbest metin bloğu (Açıklama/Detay) — metin 48 sütuna
+  /// sarmalanır, bloktan sonra ayırıcı bir boş satır bırakılır.
+  List<int> _textBlock(String title, String content) {
+    final out = <int>[];
+    out.addAll(_line(title));
+    for (final line in _wrap(content)) {
+      out.addAll(_line(line));
+    }
+    out.addAll(_feed(1));
+    return out;
+  }
+
+  /// Başlık + madde işaretli liste bloğu (Yapılan İşlemler/Sarf
+  /// Malzemeleri) — CP857'de karşılığı olmayan "✓" yerine ASCII-güvenli
+  /// "-" işareti kullanılır (baskı hatası riskini önler).
+  List<int> _listBlock(String title, List<String> items) {
+    final out = <int>[];
+    out.addAll(_line(title));
+    for (final item in items) {
+      for (final line in _wrap('- $item')) {
+        out.addAll(_line(line));
+      }
+    }
+    out.addAll(_feed(1));
+    return out;
+  }
+
+  /// Toplam hizmet / (varsa) ön ödeme / kalan tutar — `remainingAmount`
+  /// sunucudan geldiği gibi basılır, istemci tarafında yeniden hesaplanmaz.
+  List<int> _paymentSummary(ReceiptData data) {
+    final out = <int>[];
+    out.addAll(_line('Toplam Hizmet'));
+    out.addAll(_line(CurrencyFormatter.format(data.totalPrice)));
+    if (data.prepaymentAmount != null) {
+      out.addAll(_feed(1));
+      out.addAll(_line('Ön Ödeme'));
+      out.addAll(_line(CurrencyFormatter.format(data.prepaymentAmount!)));
+    }
+    out.addAll(_feed(1));
+    out.addAll(_line('Kalan Tutar'));
+    out.addAll(_line(CurrencyFormatter.format(data.remainingAmount)));
+    return out;
   }
 
   List<int> _align(int mode) => [0x1B, 0x61, mode]; // ESC a n

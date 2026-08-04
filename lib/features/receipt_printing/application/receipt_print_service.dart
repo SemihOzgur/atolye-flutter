@@ -98,6 +98,11 @@ class ReceiptPrintService {
       createdAt: now,
       statusLabel: 'Test',
       printedAt: now,
+      serviceNames: const ['Boyama', 'Deri Bakımı'],
+      consumableNames: const ['Deri Boya', 'Koruyucu Sprey'],
+      totalPrice: 1000,
+      prepaymentAmount: 250,
+      remainingAmount: 750,
     );
     final bytes = _escPosBuilder.build(data);
     // GEÇİCİ: n=57 ("PC3846") satırının gerçekten CP857 byte'larını doğru

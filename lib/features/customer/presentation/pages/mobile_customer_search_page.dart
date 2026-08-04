@@ -16,9 +16,9 @@ import '../widgets/iys_status_badge.dart';
 
 /// Mobil müşteri arama — Product Create akışının önkoşulu (`customerId`).
 /// [CustomerSearchCubit]/[ICustomerRepository] masaüstüyle aynen paylaşılır
-/// (bkz. Analiz §9.2). Müşteri oluşturma bu sprint kapsamı dışıdır (yalnızca
-/// Product Create/Detail) — burada listelenen müşteriler arasından seçim
-/// yapılır.
+/// (bkz. Analiz §9.2). FAB üzerinden `/customers/new` (Customer Create)
+/// akışına da giriş sağlar; aksi halde listelenen müşteriler arasından
+/// seçim yapılır.
 class MobileCustomerSearchPage extends StatelessWidget {
   const MobileCustomerSearchPage({super.key});
 
@@ -63,6 +63,11 @@ class _MobileCustomerSearchViewState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Müşteri Seç')),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Yeni Müşteri',
+        onPressed: () => context.push('${AppRoutes.customers}/new'),
+        child: const Icon(Icons.person_add_alt_rounded),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceL),
         child: Column(

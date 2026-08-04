@@ -30,7 +30,11 @@
       "Bash(gh repo *)",
       "Bash(python3 -)",
       "Bash(dart analyze *)",
-      "Bash(flutter clean *)"
+      "Bash(flutter clean *)",
+      "Read(//Users/semih/AtolyeProje/**)",
+      "Bash(find / -maxdepth 3 -iname \"*backend*\" -o -iname \"*dotika*\")",
+      "Bash(grep -n \"printedAt: baseData.printedAt,$\" /Users/semih/AtolyeProje/atolye_flutter/test/features/receipt_printing/escpos_builder_test.dart)",
+      "Bash(git stash *)"
     ],
     "additionalDirectories": [
       "/private/tmp"

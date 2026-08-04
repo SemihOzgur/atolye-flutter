@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/customer/presentation/pages/mobile_customer_detail_page.dart';
+import '../../features/customer/presentation/pages/mobile_customer_form_page.dart';
 import '../../features/customer/presentation/pages/mobile_customer_search_page.dart';
 import '../../features/dashboard/presentation/pages/mobile_dashboard_page.dart';
 import '../../features/scanner/presentation/pages/camera_permission_page.dart';
@@ -64,12 +65,18 @@ GoRouter buildMobileRouter(
       GoRoute(
         path: AppRoutes.customers,
         builder: (context, state) => const MobileCustomerSearchPage(),
-      ),
-      GoRoute(
-        path: '${AppRoutes.customers}/:id',
-        builder: (context, state) => MobileCustomerDetailPage(
-          customerId: int.parse(state.pathParameters['id']!),
-        ),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const MobileCustomerFormPage(),
+          ),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) => MobileCustomerDetailPage(
+              customerId: int.parse(state.pathParameters['id']!),
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '${AppRoutes.workOrders}/new',

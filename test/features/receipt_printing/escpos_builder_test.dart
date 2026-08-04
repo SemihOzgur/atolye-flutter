@@ -1,6 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leather_care_admin/features/receipt_printing/data/escpos/cp857_encoder.dart';
 import 'package:leather_care_admin/features/receipt_printing/data/escpos/escpos_builder.dart';
 import 'package:leather_care_admin/features/receipt_printing/domain/receipt_data.dart';
+
+/// `String.fromCharCodes` + `contains(...)`, CP857'ye kodlanmış Türkçe
+/// karakterli metinlerle çalışmaz (bayt değerleri Unicode kod noktalarıyla
+/// örtüşmez) — bu yardımcı beklenen metni aynı kod sayfasıyla kodlayıp
+/// bayt dizisi içinde arar.
+bool _containsCp857Text(List<int> bytes, String text) {
+  return _containsSequence(bytes, const Cp857Encoder().encode(text));
+}
 
 bool _containsSequence(List<int> haystack, List<int> needle) {
   if (needle.isEmpty || needle.length > haystack.length) return false;
@@ -43,6 +52,8 @@ void main() {
     createdAt: DateTime(2026, 7, 12, 10, 30),
     statusLabel: 'Teslim Alındı',
     printedAt: DateTime(2026, 7, 12, 10, 31),
+    totalPrice: 100,
+    remainingAmount: 100,
   );
 
   test('starts with init (ESC @) and CP857 selection (ESC t 57)', () {
@@ -99,6 +110,8 @@ void main() {
       createdAt: baseData.createdAt,
       statusLabel: baseData.statusLabel,
       printedAt: baseData.printedAt,
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
     );
 
     final bytes = builder.build(data);
@@ -118,6 +131,8 @@ void main() {
       createdAt: baseData.createdAt,
       statusLabel: baseData.statusLabel,
       printedAt: baseData.printedAt,
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
     );
 
     final bytes = builder.build(data);
@@ -144,6 +159,8 @@ void main() {
       createdAt: baseData.createdAt,
       statusLabel: baseData.statusLabel,
       printedAt: baseData.printedAt,
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
     );
 
     final bytes = builder.build(data);
@@ -164,6 +181,8 @@ void main() {
       createdAt: baseData.createdAt,
       statusLabel: baseData.statusLabel,
       printedAt: baseData.printedAt,
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
     );
 
     final bytes = builder.build(data, includeTrackingQr: true);
@@ -182,5 +201,159 @@ void main() {
     final bytes = builder.build(baseData);
     // "Yılmaz" — ı(0x8D). Confirms non-ASCII text is not passed as raw UTF-8.
     expect(_containsSequence(bytes, [0x8D]), isTrue);
+  });
+
+  test('description and existingDamages print under separate headers', () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      description: 'Ön kısımda açılma mevcut.',
+      existingDamages: 'Taban yeniden yapıştırılacak.',
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
+    );
+
+    final bytes = builder.build(data);
+
+    expect(_containsCp857Text(bytes, 'Açıklama'), isTrue);
+    expect(_containsCp857Text(bytes, 'Ön kısımda açılma mevcut.'), isTrue);
+    expect(_containsCp857Text(bytes, 'Detay'), isTrue);
+    expect(
+      _containsCp857Text(bytes, 'Taban yeniden yapıştırılacak.'),
+      isTrue,
+    );
+    // No longer joined with ' / ' into a single combined block.
+    expect(_containsCp857Text(bytes, ' / '), isFalse);
+  });
+
+  test('description/existingDamages headers are omitted when both are null',
+      () {
+    final bytes = builder.build(baseData);
+
+    expect(_containsCp857Text(bytes, 'Açıklama'), isFalse);
+    expect(_containsCp857Text(bytes, 'Detay'), isFalse);
+  });
+
+  test('serviceNames print under "Yapılan İşlemler" with a dash marker', () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      serviceNames: const ['Boyama', 'Deri Bakımı'],
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
+    );
+
+    final bytes = builder.build(data);
+
+    expect(_containsCp857Text(bytes, 'Yapılan İşlemler'), isTrue);
+    expect(_containsCp857Text(bytes, '- Boyama'), isTrue);
+    expect(_containsCp857Text(bytes, '- Deri Bakımı'), isTrue);
+  });
+
+  test('consumableNames print under "Sarf Malzemeleri" with a dash marker',
+      () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      consumableNames: const ['Deri Boya', 'Koruyucu Sprey'],
+      totalPrice: baseData.totalPrice,
+      remainingAmount: baseData.remainingAmount,
+    );
+
+    final asLatin1 = String.fromCharCodes(builder.build(data));
+
+    expect(asLatin1.contains('Sarf Malzemeleri'), isTrue);
+    expect(asLatin1.contains('- Deri Boya'), isTrue);
+    expect(asLatin1.contains('- Koruyucu Sprey'), isTrue);
+  });
+
+  test('services/consumables sections are omitted when the lists are empty',
+      () {
+    final bytes = builder.build(baseData);
+
+    expect(_containsCp857Text(bytes, 'Yapılan İşlemler'), isFalse);
+    expect(_containsCp857Text(bytes, 'Sarf Malzemeleri'), isFalse);
+  });
+
+  test('payment summary prints total and remaining, omitting prepayment '
+      'when null', () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      totalPrice: 2400,
+      remainingAmount: 2400,
+    );
+
+    final bytes = builder.build(data);
+
+    expect(_containsCp857Text(bytes, 'Toplam Hizmet'), isTrue);
+    expect(_containsCp857Text(bytes, '2.400,00'), isTrue);
+    expect(_containsCp857Text(bytes, 'Ön Ödeme'), isFalse);
+    expect(_containsCp857Text(bytes, 'Kalan Tutar'), isTrue);
+  });
+
+  test('payment summary includes prepayment when present', () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      totalPrice: 2400,
+      prepaymentAmount: 500,
+      remainingAmount: 1900,
+    );
+
+    final bytes = builder.build(data);
+
+    expect(_containsCp857Text(bytes, 'Ön Ödeme'), isTrue);
+    expect(_containsCp857Text(bytes, '500,00'), isTrue);
+    expect(_containsCp857Text(bytes, 'Kalan Tutar'), isTrue);
+    expect(_containsCp857Text(bytes, '1.900,00'), isTrue);
+  });
+
+  test('new sections are inserted before the trailing feed+cut', () {
+    final data = ReceiptData(
+      orderNumber: baseData.orderNumber,
+      customerName: baseData.customerName,
+      phone: baseData.phone,
+      categoryPath: baseData.categoryPath,
+      createdAt: baseData.createdAt,
+      statusLabel: baseData.statusLabel,
+      printedAt: baseData.printedAt,
+      serviceNames: const ['Boyama'],
+      consumableNames: const ['Deri Boya'],
+      totalPrice: 2400,
+      prepaymentAmount: 500,
+      remainingAmount: 1900,
+    );
+
+    final bytes = builder.build(data);
+
+    expect(bytes.sublist(bytes.length - 4), [0x1D, 0x56, 0x42, 0x00]);
+    final beforeCut = bytes.sublist(bytes.length - 8, bytes.length - 4);
+    expect(beforeCut, [0x0A, 0x0A, 0x0A, 0x0A]);
   });
 }

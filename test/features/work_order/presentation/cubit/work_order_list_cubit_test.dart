@@ -60,6 +60,37 @@ void main() {
     expect(cubit.state.errorMessage, 'İş emirleri yüklenemedi.');
   });
 
+  test('search(status: null) clears an already-selected status filter', () async {
+    repository.pageToReturn = PagedResponse(
+      items: [item],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    );
+
+    await cubit.search(status: 'RECEIVED');
+    expect(cubit.state.statusFilter, 'RECEIVED');
+
+    await cubit.search(status: null);
+    expect(cubit.state.statusFilter, isNull);
+  });
+
+  test('search(query: ...) without status keeps the current status filter',
+      () async {
+    repository.pageToReturn = PagedResponse(
+      items: [item],
+      page: 1,
+      pageSize: 20,
+      totalCount: 1,
+    );
+
+    await cubit.search(status: 'READY');
+    await cubit.search(query: 'nike');
+
+    expect(cubit.state.statusFilter, 'READY');
+    expect(cubit.state.query, 'nike');
+  });
+
   test('goToPage keeps existing filters', () async {
     repository.pageToReturn = PagedResponse(
       items: [item],

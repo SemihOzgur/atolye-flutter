@@ -29,9 +29,8 @@ const _statusOptions = <String?, String>{
 /// aynı [WorkOrderListCubit]/[IWorkOrderRepository]'yi paylaşır (Analiz
 /// §9.2/§6: cubit/repository aynen kullanılabilir). Satıra dokununca
 /// mevcut [MobileWorkOrderDetailPage] rotasına (`/work-orders/:id`) gider.
-/// Yeni ürün oluşturma girişi bu ekranda UI'dan kaldırıldı (kullanıcı
-/// kararı); müşteri seçim akışı ve create formu kod olarak duruyor,
-/// yalnızca buradan bir giriş noktası yok.
+/// Yeni ürün oluşturma girişi FAB üzerinden müşteri seçim akışına
+/// (`/customers` → müşteri detay → "Yeni Ürün") yönlendirir.
 class MobileWorkOrderListPage extends StatelessWidget {
   const MobileWorkOrderListPage({super.key});
 
@@ -75,6 +74,11 @@ class _MobileWorkOrderListViewState extends State<_MobileWorkOrderListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Ürünler')),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Yeni Ürün',
+        onPressed: () => context.push(AppRoutes.customers),
+        child: const Icon(Icons.add_rounded),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(AppDimensions.spaceL),
         child: Column(

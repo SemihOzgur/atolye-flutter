@@ -18,6 +18,11 @@ class ReceiptData {
     required this.statusLabel,
     this.trackingUrl,
     required this.printedAt,
+    this.serviceNames = const [],
+    this.consumableNames = const [],
+    required this.totalPrice,
+    this.prepaymentAmount,
+    required this.remainingAmount,
   });
 
   factory ReceiptData.fromWorkOrder(
@@ -43,6 +48,11 @@ class ReceiptData {
       statusLabel: WorkOrderStatusBadge.presentationFor(dto.status).label,
       trackingUrl: dto.trackingUrl,
       printedAt: printedAt,
+      serviceNames: dto.services.map((s) => s.serviceName).toList(),
+      consumableNames: dto.consumables.map((c) => c.productName).toList(),
+      totalPrice: dto.price,
+      prepaymentAmount: dto.hasPrepayment ? dto.prepaymentAmount : null,
+      remainingAmount: dto.remainingAmount,
     );
   }
 
@@ -61,6 +71,11 @@ class ReceiptData {
   final String statusLabel;
   final String? trackingUrl;
   final DateTime printedAt;
+  final List<String> serviceNames;
+  final List<String> consumableNames;
+  final double totalPrice;
+  final double? prepaymentAmount;
+  final double remainingAmount;
 }
 
 /// "+905321234567" / "05321234567" → "0532 *** ** 67". Beklenmeyen
