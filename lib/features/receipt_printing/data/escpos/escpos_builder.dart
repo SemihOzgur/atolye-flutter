@@ -25,7 +25,11 @@ class EscPosBuilder {
   final int columnWidth;
 
   static const List<int> _init = [0x1B, 0x40]; // ESC @
-  static const List<int> _selectCp857 = [0x1B, 0x74, 0x39]; // ESC t 57 (PC857, printer self-test)
+  static const List<int> _selectCp857 = [
+    0x1B,
+    0x74,
+    0x39
+  ]; // ESC t 57 (PC857, printer self-test)
   static const List<int> _cut = [0x1D, 0x56, 0x42, 0x00]; // GS V 66 0
 
   Uint8List build(
@@ -49,7 +53,23 @@ class EscPosBuilder {
   /// kod sayfası odur.
   Uint8List buildCodepageDiagnostic() {
     const candidates = [
-      0, 2, 3, 4, 5, 6, 13, 16, 17, 18, 19, 20, 21, 22, 32, 36, 57,
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      13,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      32,
+      36,
+      57,
     ];
     final turkishBytes = Cp857Encoder.turkishByteValues;
 
@@ -80,6 +100,8 @@ class EscPosBuilder {
     out.add(_align(1));
     out.add(_size(0x11));
     out.add(_line('DoTiKa'));
+    out.add(_size(0x00));
+    out.add(_line('Deri Bakım Merkezi'));
 
     // 2. orderNumber (ortalı, çift yükseklik) — barkod içeriği de bu
     out.add(_size(0x01));
@@ -182,17 +204,20 @@ class EscPosBuilder {
   List<int> _paymentSummary(ReceiptData data) {
     final out = <int>[];
     out.addAll(_line('Toplam Hizmet'));
-    out.addAll(_line(CurrencyFormatter.format(data.totalPrice)));
+    out.addAll(_line(_formatCurrencyTl(data.totalPrice)));
     if (data.prepaymentAmount != null) {
       out.addAll(_feed(1));
       out.addAll(_line('Ön Ödeme'));
-      out.addAll(_line(CurrencyFormatter.format(data.prepaymentAmount!)));
+      out.addAll(_line(_formatCurrencyTl(data.prepaymentAmount!)));
     }
     out.addAll(_feed(1));
     out.addAll(_line('Kalan Tutar'));
-    out.addAll(_line(CurrencyFormatter.format(data.remainingAmount)));
+    out.addAll(_line(_formatCurrencyTl(data.remainingAmount)));
     return out;
   }
+
+  String _formatCurrencyTl(double amount) =>
+      CurrencyFormatter.format(amount).replaceFirst(' ₺', ' TL');
 
   List<int> _align(int mode) => [0x1B, 0x61, mode]; // ESC a n
   List<int> _size(int n) => [0x1D, 0x21, n]; // GS ! n

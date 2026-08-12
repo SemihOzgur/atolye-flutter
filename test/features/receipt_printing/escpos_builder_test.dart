@@ -117,6 +117,7 @@ void main() {
     final bytes = builder.build(data);
     final asLatin1 = String.fromCharCodes(bytes);
 
+    expect(_containsCp857Text(bytes, 'Deri Bakım Merkezi'), isTrue);
     expect(asLatin1.contains('Marka: Nike'), isTrue);
   });
 
@@ -192,7 +193,8 @@ void main() {
       isTrue,
     ); // model select
     expect(
-      _containsSequence(bytes, [0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]),
+      _containsSequence(
+          bytes, [0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]),
       isTrue,
     ); // print
   });
@@ -260,8 +262,7 @@ void main() {
     expect(_containsCp857Text(bytes, '- Deri Bakımı'), isTrue);
   });
 
-  test('consumableNames print under "Sarf Malzemeleri" with a dash marker',
-      () {
+  test('consumableNames print under "Sarf Malzemeleri" with a dash marker', () {
     final data = ReceiptData(
       orderNumber: baseData.orderNumber,
       customerName: baseData.customerName,
@@ -290,7 +291,8 @@ void main() {
     expect(_containsCp857Text(bytes, 'Sarf Malzemeleri'), isFalse);
   });
 
-  test('payment summary prints total and remaining, omitting prepayment '
+  test(
+      'payment summary prints total and remaining, omitting prepayment '
       'when null', () {
     final data = ReceiptData(
       orderNumber: baseData.orderNumber,
@@ -307,7 +309,7 @@ void main() {
     final bytes = builder.build(data);
 
     expect(_containsCp857Text(bytes, 'Toplam Hizmet'), isTrue);
-    expect(_containsCp857Text(bytes, '2.400,00'), isTrue);
+    expect(_containsCp857Text(bytes, '2.400,00 TL'), isTrue);
     expect(_containsCp857Text(bytes, 'Ön Ödeme'), isFalse);
     expect(_containsCp857Text(bytes, 'Kalan Tutar'), isTrue);
   });
@@ -329,9 +331,9 @@ void main() {
     final bytes = builder.build(data);
 
     expect(_containsCp857Text(bytes, 'Ön Ödeme'), isTrue);
-    expect(_containsCp857Text(bytes, '500,00'), isTrue);
+    expect(_containsCp857Text(bytes, '500,00 TL'), isTrue);
     expect(_containsCp857Text(bytes, 'Kalan Tutar'), isTrue);
-    expect(_containsCp857Text(bytes, '1.900,00'), isTrue);
+    expect(_containsCp857Text(bytes, '1.900,00 TL'), isTrue);
   });
 
   test('new sections are inserted before the trailing feed+cut', () {
