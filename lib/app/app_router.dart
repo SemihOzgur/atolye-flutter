@@ -8,9 +8,10 @@ import '../features/customer/presentation/pages/customer_detail_page.dart';
 import '../features/customer/presentation/pages/customer_form_page.dart';
 import '../features/customer/presentation/pages/customer_search_page.dart';
 import '../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../features/receipt/presentation/pages/receipt_detail_page.dart';
+import '../features/receipt/presentation/pages/receipt_form_page.dart';
 import '../features/social_media/presentation/pages/social_media_page.dart';
 import '../features/work_order/presentation/pages/work_order_detail_page.dart';
-import '../features/work_order/presentation/pages/work_order_form_page.dart';
 import '../features/work_order/presentation/pages/work_order_list_page.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -72,12 +73,13 @@ GoRouter buildAppRouter(
               ),
             ),
             routes: [
+              // Yeni sipariş her zaman fiş formundan açılır (tek ürün dahil);
+              // WorkOrderFormPage yalnızca mevcut iş emrini düzenlemek için.
               GoRoute(
                 path: 'new',
-                builder: (context, state) => WorkOrderFormPage(
-                  customerId: int.tryParse(
-                    state.uri.queryParameters['customerId'] ?? '',
-                  ),
+                builder: (context, state) => ReceiptFormPage(
+                  customerId:
+                      int.parse(state.uri.queryParameters['customerId']!),
                 ),
               ),
               GoRoute(
@@ -87,6 +89,12 @@ GoRouter buildAppRouter(
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: '${AppRoutes.receipts}/:id',
+            builder: (context, state) => ReceiptDetailPage(
+              receiptId: int.parse(state.pathParameters['id']!),
+            ),
           ),
           GoRoute(
             path: AppRoutes.catalog,

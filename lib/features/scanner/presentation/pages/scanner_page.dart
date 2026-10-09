@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../app/app_routes.dart';
 import '../../../../core/di/injection.dart';
+import '../../../receipt/data/receipt_repository.dart';
 import '../../../work_order/data/work_order_repository.dart';
 import '../cubit/scan_resolve_cubit.dart';
 import '../cubit/scan_resolve_state.dart';
@@ -20,7 +21,10 @@ class ScannerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<ScanResolveCubit>(
-      create: (_) => ScanResolveCubit(getIt<IWorkOrderRepository>()),
+      create: (_) => ScanResolveCubit(
+        getIt<IWorkOrderRepository>(),
+        getIt<IReceiptRepository>(),
+      ),
       child: const _ScannerView(),
     );
   }
@@ -80,6 +84,11 @@ class _ScannerViewState extends State<_ScannerView> {
             state.resolvedWorkOrderId != null) {
           context.pushReplacement(
             '${AppRoutes.workOrders}/${state.resolvedWorkOrderId}',
+          );
+        } else if (state.status == ScanResolveStatus.resolved &&
+            state.resolvedReceiptId != null) {
+          context.pushReplacement(
+            '${AppRoutes.receipts}/${state.resolvedReceiptId}',
           );
         }
       },

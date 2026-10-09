@@ -22,6 +22,8 @@ _$WorkOrderListItemDtoImpl _$$WorkOrderListItemDtoImplFromJson(
           ? null
           : DateTime.parse(json['estimatedDeliveryDate'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      receiptId: (json['receiptId'] as num?)?.toInt(),
+      receiptNumber: json['receiptNumber'] as String?,
     );
 
 Map<String, dynamic> _$$WorkOrderListItemDtoImplToJson(
@@ -39,4 +41,6 @@ Map<String, dynamic> _$$WorkOrderListItemDtoImplToJson(
       'estimatedDeliveryDate':
           instance.estimatedDeliveryDate?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
+      'receiptId': instance.receiptId,
+      'receiptNumber': instance.receiptNumber,
     };

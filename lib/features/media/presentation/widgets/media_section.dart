@@ -47,7 +47,7 @@ class MediaSection extends StatelessWidget {
           if (isOrderOpen)
             BlocBuilder<MediaGalleryCubit, MediaGalleryState>(
               builder: (context, state) {
-                return MediaUploadPanel(existingMediaCount: state.items.length);
+                return MediaUploadPanel(existingMediaIds: state.items.map((item) => item.id).toSet());
               },
             ),
           const SizedBox(height: AppDimensions.spaceM),

@@ -52,7 +52,7 @@ class MobileMediaSection extends StatelessWidget {
             BlocBuilder<MediaGalleryCubit, MediaGalleryState>(
               builder: (context, state) {
                 return MobileMediaUploadPanel(
-                  existingMediaCount: state.items.length,
+                  existingMediaIds: state.items.map((item) => item.id).toSet(),
                 );
               },
             ),

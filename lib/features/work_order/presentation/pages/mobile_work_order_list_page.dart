@@ -30,7 +30,7 @@ const _statusOptions = <String?, String>{
 /// §9.2/§6: cubit/repository aynen kullanılabilir). Satıra dokununca
 /// mevcut [MobileWorkOrderDetailPage] rotasına (`/work-orders/:id`) gider.
 /// Yeni ürün oluşturma girişi FAB üzerinden müşteri seçim akışına
-/// (`/customers` → müşteri detay → "Yeni Ürün") yönlendirir.
+/// (`/customers` → müşteri detay → "Yeni Fiş") yönlendirir.
 class MobileWorkOrderListPage extends StatelessWidget {
   const MobileWorkOrderListPage({super.key});
 
@@ -75,7 +75,7 @@ class _MobileWorkOrderListViewState extends State<_MobileWorkOrderListView> {
     return Scaffold(
       appBar: AppBar(title: const Text('Ürünler')),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Yeni Ürün',
+        tooltip: 'Yeni Fiş',
         onPressed: () => context.push(AppRoutes.customers),
         child: const Icon(Icons.add_rounded),
       ),
@@ -162,7 +162,8 @@ class _MobileWorkOrderListViewState extends State<_MobileWorkOrderListView> {
                                         children: [
                                           Text(
                                             '${workOrder.orderNumber} — '
-                                            '${workOrder.customerFullName}',
+                                            '${workOrder.customerFullName}'
+                                            '${workOrder.receiptNumber != null ? '  ·  Fiş ${workOrder.receiptNumber}' : ''}',
                                           ),
                                           const SizedBox(
                                             height: AppDimensions.spaceXxs,

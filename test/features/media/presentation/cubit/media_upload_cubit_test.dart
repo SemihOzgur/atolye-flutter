@@ -47,6 +47,31 @@ void main() {
     expect(confirmedCalls, 1);
   });
 
+  test('occupiedSlots counts a finished upload once, before and after gallery refresh',
+      () async {
+    final file = File('${tempDir.path}/clip.jpg')..writeAsBytesSync([1, 2, 3]);
+    final cubit = MediaUploadCubit(repository, conversionService, 7);
+
+    await cubit.enqueueFiles([file.path], 'BEFORE');
+    expect(cubit.state.tasks.single.mediaFileId, 42);
+
+    // Galeri henüz yenilenmedi (9 eski medya): biten yükleme yine 1 yer tutar
+    final before = {for (var i = 1; i <= 9; i++) i};
+    expect(cubit.state.occupiedSlots(before), 10);
+
+    // Galeri yenilendi, 42 artık galeride: iki kez sayılmaz (eski hata: 11)
+    expect(cubit.state.occupiedSlots({...before, 42}), 10);
+  });
+
+  test('occupiedSlots ignores failed tasks', () async {
+    final file = File('${tempDir.path}/document.pdf')..writeAsBytesSync([1]);
+    final cubit = MediaUploadCubit(repository, conversionService, 7);
+
+    await cubit.enqueueFiles([file.path], 'BEFORE');
+
+    expect(cubit.state.occupiedSlots({1, 2}), 2);
+  });
+
   test('enqueueFiles marks unsupported extensions as error immediately', () async {
     final file = File('${tempDir.path}/document.pdf')..writeAsBytesSync([1]);
     final cubit = MediaUploadCubit(repository, conversionService, 7);

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../../../core/utils/currency_formatter.dart';
 import '../../domain/receipt_data.dart';
+import '../../domain/receipt_slip_data.dart';
 import 'cp857_encoder.dart';
 
 /// [ReceiptData] → ESC/POS byte dizisi. Saf fonksiyondur — IO yapmaz,
@@ -43,6 +44,107 @@ class EscPosBuilder {
     }
     return out.toBytes();
   }
+
+  /// Çok kalemli fiş (toplu teslim alma) — tek fiş numarası + tek barkod,
+  /// ürün satırları ve fiş toplamları. Tek ürünlük iş emri fişi [build].
+  Uint8List buildSlip(
+    ReceiptSlipData data, {
+    int copies = 1,
+    bool includeTrackingQr = false,
+  }) {
+    final out = BytesBuilder();
+    for (var i = 0; i < copies; i++) {
+      out.add(_buildSlipCopy(data, includeTrackingQr: includeTrackingQr));
+    }
+    return out.toBytes();
+  }
+
+  Uint8List _buildSlipCopy(
+    ReceiptSlipData data, {
+    required bool includeTrackingQr,
+  }) {
+    final out = BytesBuilder();
+    out.add(_init);
+    out.add(_selectCp857);
+
+    out.add(_align(1));
+    out.add(_size(0x11));
+    out.add(_line('DoTiKa'));
+    out.add(_size(0x00));
+    out.add(_line('Deri Bakım Merkezi'));
+
+    // Fiş numarası (barkod içeriği de bu)
+    out.add(_size(0x01));
+    out.add(_line(data.receiptNumber));
+    out.add(_size(0x00));
+    out.add(_code128(data.receiptNumber));
+    out.add(_feed(1));
+
+    out.add(_align(0));
+    out.add(_line('${data.customerName}  ${data.phone}'));
+    out.add(_line('Kabul: ${_formatDate(data.createdAt)}'));
+    if (data.estimatedDeliveryDate != null) {
+      out.add(_line('Tah. Teslim: ${_formatDate(data.estimatedDeliveryDate!)}'));
+    }
+    out.add(_line('${data.items.length} ürün'));
+    out.add(_line(_rule()));
+
+    for (var i = 0; i < data.items.length; i++) {
+      final item = data.items[i];
+      out.add(_pair('${i + 1}) ${item.productType}', _formatCurrencyTl(item.price)));
+      if (item.details.isNotEmpty) {
+        for (final line in _wrap('   ${item.details}')) {
+          out.add(_line(line));
+        }
+      }
+      for (final name in [...item.serviceNames, ...item.consumableNames]) {
+        for (final line in _wrap('   - $name')) {
+          out.add(_line(line));
+        }
+      }
+      final damages = item.existingDamages;
+      if (damages != null && damages.trim().isNotEmpty) {
+        for (final line in _wrap('   Detay: $damages')) {
+          out.add(_line(line));
+        }
+      }
+    }
+    out.add(_line(_rule()));
+
+    out.add(_pair('TOPLAM', _formatCurrencyTl(data.totalPrice)));
+    if (data.prepaymentAmount > 0) {
+      out.add(_pair('Ön Ödeme', _formatCurrencyTl(data.prepaymentAmount)));
+    }
+    if (data.collectedAmount > 0) {
+      out.add(_pair('Tahsil Edilen', _formatCurrencyTl(data.collectedAmount)));
+    }
+    out.add(_size(0x01));
+    out.add(_pair('KALAN', _formatCurrencyTl(data.remainingAmount)));
+    out.add(_size(0x00));
+    out.add(_line('Basim: ${_formatDateTime(data.printedAt)}'));
+
+    if (includeTrackingQr) {
+      out.add(_feed(1));
+      out.add(_align(1));
+      out.add(_qrCode(data.trackingUrl));
+      out.add(_feed(1));
+      out.add(_align(0));
+    }
+
+    out.add(_feed(4));
+    out.add(_cut);
+    return out.toBytes();
+  }
+
+  /// Sola dayalı etiket + sağa dayalı tutar tek satırda; sığmazsa etiket
+  /// kırpılır (tutar asla kesilmez).
+  List<int> _pair(String left, String right) {
+    final room = columnWidth - right.length - 1;
+    final label = left.length > room ? left.substring(0, room) : left;
+    return _line('${label.padRight(room)} $right');
+  }
+
+  String _rule() => '-' * columnWidth;
 
   /// TANI ARACI (F4-QA1): `_selectCp857`'nin bu yazıcıda doğru CP857
   /// bastığı sahada doğrulanmıştır (ESC t 57). Farklı bir yazıcı modeline

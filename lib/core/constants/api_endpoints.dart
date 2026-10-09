@@ -92,6 +92,19 @@ class ApiEndpoints {
   static ApiRoute resendSms(int workOrderId) =>
       ApiRoute('/api/work-orders/$workOrderId/sms/resend', HttpMethod.post);
 
+  static const ApiRoute createReceipt =
+      ApiRoute('/api/receipts', HttpMethod.post);
+  static ApiRoute receiptDetail(int receiptId) =>
+      ApiRoute('/api/receipts/$receiptId', HttpMethod.get);
+  static ApiRoute receiptByNumber(String receiptNumber) => ApiRoute(
+        '/api/receipts/by-number/${Uri.encodeComponent(receiptNumber)}',
+        HttpMethod.get,
+      );
+  static ApiRoute receiptStatus(int receiptId) =>
+      ApiRoute('/api/receipts/$receiptId/status', HttpMethod.post);
+  static ApiRoute receiptDeliver(int receiptId) =>
+      ApiRoute('/api/receipts/$receiptId/deliver', HttpMethod.post);
+
   static ApiRoute requestMediaUpload(int workOrderId) => ApiRoute(
         '/api/work-orders/$workOrderId/media/request-upload',
         HttpMethod.post,

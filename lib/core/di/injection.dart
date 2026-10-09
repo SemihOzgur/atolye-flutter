@@ -9,6 +9,7 @@ import '../../features/customer/data/customer_repository.dart';
 import '../../features/dashboard/data/dashboard_repository.dart';
 import '../../features/media/data/media_conversion_service.dart';
 import '../../features/media/data/media_repository.dart';
+import '../../features/receipt/data/receipt_repository.dart';
 import '../../features/receipt_printing/application/receipt_print_service.dart';
 import '../../features/social_media/data/social_media_repository.dart';
 import '../../features/work_order/data/work_order_repository.dart';
@@ -69,6 +70,12 @@ Future<void> setupLocator() async {
   if (!getIt.isRegistered<IWorkOrderRepository>()) {
     getIt.registerLazySingleton<IWorkOrderRepository>(
       () => WorkOrderRepository(getIt<Dio>()),
+    );
+  }
+
+  if (!getIt.isRegistered<IReceiptRepository>()) {
+    getIt.registerLazySingleton<IReceiptRepository>(
+      () => ReceiptRepository(getIt<Dio>()),
     );
   }
 

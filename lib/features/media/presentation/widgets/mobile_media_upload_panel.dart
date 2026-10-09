@@ -4,9 +4,12 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../data/media_format_validator.dart';
 import '../cubit/media_upload_cubit.dart';
 import '../cubit/media_upload_state.dart';
 import '../cubit/upload_task.dart';
+
+const int _maxMedia = MediaFormatValidator.maxMediaPerOrder;
 
 const _stages = <String, String>{
   'BEFORE': 'Öncesi',
@@ -22,10 +25,11 @@ const _stages = <String, String>{
 class MobileMediaUploadPanel extends StatefulWidget {
   const MobileMediaUploadPanel({
     super.key,
-    required this.existingMediaCount,
+    required this.existingMediaIds,
   });
 
-  final int existingMediaCount;
+  /// Galerideki (sunucuda UPLOADED) medya kayıtlarının id'leri.
+  final Set<int> existingMediaIds;
 
   @override
   State<MobileMediaUploadPanel> createState() =>
@@ -66,7 +70,7 @@ class _MobileMediaUploadPanelState extends State<MobileMediaUploadPanel> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'İş emri başına en fazla 20 medya eklenebilir. '
+            'İş emri başına en fazla $_maxMedia medya eklenebilir. '
             'Yalnızca ilk $remainingSlots dosya eklendi.',
           ),
         ),
@@ -81,15 +85,10 @@ class _MobileMediaUploadPanelState extends State<MobileMediaUploadPanel> {
   Widget build(BuildContext context) {
     return BlocBuilder<MediaUploadCubit, MediaUploadState>(
       builder: (context, state) {
-        // Kuyruktaki (hatalı olmayan) task'lar da limite dahil edilir —
-        // Analiz §9.4/Risk 12: yalnızca `done` sayan sayaç, sunucu 20
-        // limitine takılmadan önce kullanıcının fazla dosya seçmesine izin
-        // veriyordu.
-        final inFlightCount = state.tasks
-            .where((task) => task.status != UploadTaskStatus.error)
-            .length;
-        final totalCount = widget.existingMediaCount + inFlightCount;
-        final remainingSlots = 20 - totalCount;
+        // Kuyruktaki task'lar limite dahil (Analiz §9.4/Risk 12); biten task
+        // galeriye yansıyınca iki kez sayılmaz (bkz. occupiedSlots).
+        final totalCount = state.occupiedSlots(widget.existingMediaIds);
+        final remainingSlots = _maxMedia - totalCount;
         final canAdd = remainingSlots > 0;
 
         return Column(
@@ -118,7 +117,7 @@ class _MobileMediaUploadPanelState extends State<MobileMediaUploadPanel> {
                 ),
                 const SizedBox(width: AppDimensions.spaceM),
                 Text(
-                  '$totalCount/20',
+                  '$totalCount/$_maxMedia',
                   style: const TextStyle(color: AppColors.textMuted),
                 ),
               ],

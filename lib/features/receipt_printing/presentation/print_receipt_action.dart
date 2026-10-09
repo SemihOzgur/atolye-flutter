@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/theme/app_dimensions.dart';
+import '../../receipt/data/dto/receipt_dto.dart';
 import '../../work_order/data/dto/work_order_dto.dart';
 import '../application/receipt_print_service.dart';
+import '../domain/print_result.dart';
 import 'printer_settings_dialog.dart';
 
 /// İş Emri Detay başlık satırına eklenen "Fiş Bas" butonu. Yalnızca
@@ -29,45 +31,80 @@ class PrintReceiptAction extends StatelessWidget {
     );
   }
 
-  Future<void> _handleTap(BuildContext context) async {
-    final service = getIt<ReceiptPrintService>();
-
-    var target = await service.selectedTarget();
-    if (!context.mounted) return;
-
-    if (target == null || target.isEmpty) {
-      final saved = await PrinterSettingsDialog.show(context, service);
-      if (!saved || !context.mounted) return;
-      target = await service.selectedTarget();
-      if (target == null || target.isEmpty || !context.mounted) return;
-    }
-
-    final options = await showDialog<PrintOptions>(
-      context: context,
-      builder: (_) => const _PrintPreviewDialog(),
-    );
-    if (options == null || !context.mounted) return;
-
-    final result = await service.printWorkOrderReceipt(workOrder, options);
-    if (!context.mounted) return;
-
-    if (result.success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fiş yazdırıldı.')),
+  Future<void> _handleTap(BuildContext context) => _printWithDialog(
+        context,
+        (service, options) =>
+            service.printWorkOrderReceipt(workOrder, options),
       );
-      return;
+}
+
+/// Fiş detayındaki "Fiş Bas" — çok kalemli fişi tek çıktı olarak basar.
+/// Yalnızca Windows'ta görünür ([PrintReceiptAction] ile aynı gerekçe).
+class PrintReceiptSlipAction extends StatelessWidget {
+  const PrintReceiptSlipAction({super.key, required this.receipt});
+
+  final ReceiptDto receipt;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Platform.isWindows) {
+      return const SizedBox.shrink();
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Yazıcıya erişilemedi: ${result.failureReason}'),
-        action: SnackBarAction(
-          label: 'Yazıcı Ayarları',
-          onPressed: () => PrinterSettingsDialog.show(context, service),
-        ),
+    return IconButton(
+      tooltip: 'Fiş Bas',
+      icon: const Icon(Icons.receipt_long_outlined),
+      onPressed: () => _printWithDialog(
+        context,
+        (service, options) => service.printReceiptSlip(receipt, options),
       ),
     );
   }
+}
+
+/// Ortak akış: yazıcı seçili değilse ayarlar → kopya/maske seçimi → bas → sonuç.
+Future<void> _printWithDialog(
+  BuildContext context,
+  Future<PrintResult> Function(ReceiptPrintService service, PrintOptions options)
+      print,
+) async {
+  final service = getIt<ReceiptPrintService>();
+
+  var target = await service.selectedTarget();
+  if (!context.mounted) return;
+
+  if (target == null || target.isEmpty) {
+    final saved = await PrinterSettingsDialog.show(context, service);
+    if (!saved || !context.mounted) return;
+    target = await service.selectedTarget();
+    if (target == null || target.isEmpty || !context.mounted) return;
+  }
+
+  final options = await showDialog<PrintOptions>(
+    context: context,
+    builder: (_) => const _PrintPreviewDialog(),
+  );
+  if (options == null || !context.mounted) return;
+
+  final result = await print(service, options);
+  if (!context.mounted) return;
+
+  if (result.success) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Fiş yazdırıldı.')),
+    );
+    return;
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('Yazıcıya erişilemedi: ${result.failureReason}'),
+      action: SnackBarAction(
+        label: 'Yazıcı Ayarları',
+        onPressed: () => PrinterSettingsDialog.show(context, service),
+      ),
+    ),
+  );
 }
 
 /// "Fiş Bas"ın yanına eklenen ayrı bir giriş noktası — [PrinterSettingsDialog]

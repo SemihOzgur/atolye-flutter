@@ -103,7 +103,7 @@ class _CustomerDetailViewState extends State<_CustomerDetailView> {
                               '${AppRoutes.workOrders}/new'
                               '?customerId=${customer.id}',
                             ),
-                            child: const Text('Yeni İş Emri'),
+                            child: const Text('Yeni Fiş'),
                           ),
                           const SizedBox(width: AppDimensions.spaceM),
                           OutlinedButton(
