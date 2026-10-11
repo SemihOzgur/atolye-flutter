@@ -17,6 +17,8 @@ class MediaFormatInfo {
 class MediaFormatValidator {
   MediaFormatValidator._();
 
+  /// Sunucudaki `MediaRules.MaxMediaPerOrder` ile aynı — iş emri başına.
+  static const int maxMediaPerOrder = 20;
   static const int maxPhotoBytes = 25 * 1024 * 1024;
   static const int maxVideoBytes = 500 * 1024 * 1024;
 

@@ -153,7 +153,8 @@ class _WorkOrderListViewState extends State<_WorkOrderListView> {
                                     children: [
                                       Text(
                                         '${workOrder.orderNumber} — '
-                                        '${workOrder.customerFullName}',
+                                        '${workOrder.customerFullName}'
+                                        '${workOrder.receiptNumber != null ? '  ·  Fiş ${workOrder.receiptNumber}' : ''}',
                                       ),
                                       const SizedBox(
                                         height: AppDimensions.spaceXxs,

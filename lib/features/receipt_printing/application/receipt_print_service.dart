@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../../core/constants/storage_keys.dart';
 import '../../../core/services/storage_service.dart';
+import '../../receipt/data/dto/receipt_dto.dart';
 import '../../work_order/data/dto/work_order_dto.dart';
 import '../data/escpos/escpos_builder.dart';
 import '../data/printer/network_printer.dart';
@@ -9,6 +10,7 @@ import '../data/printer/receipt_printer.dart';
 import '../data/printer/windows_raw_printer.dart';
 import '../domain/print_result.dart';
 import '../domain/receipt_data.dart';
+import '../domain/receipt_slip_data.dart';
 
 enum PrinterConnectionMode { raw, network }
 
@@ -75,6 +77,24 @@ class ReceiptPrintService {
       printedAt: DateTime.now(),
     );
     final bytes = _escPosBuilder.build(
+      data,
+      copies: options.copies,
+      includeTrackingQr: options.includeTrackingQr,
+    );
+    return _sendToSelectedPrinter(bytes);
+  }
+
+  /// Çok kalemli fiş (tek numara, tek barkod, tüm ürünler).
+  Future<PrintResult> printReceiptSlip(
+    ReceiptDto receipt,
+    PrintOptions options,
+  ) async {
+    final data = ReceiptSlipData.fromReceipt(
+      receipt,
+      maskPhone: options.maskPhone,
+      printedAt: DateTime.now(),
+    );
+    final bytes = _escPosBuilder.buildSlip(
       data,
       copies: options.copies,
       includeTrackingQr: options.includeTrackingQr,

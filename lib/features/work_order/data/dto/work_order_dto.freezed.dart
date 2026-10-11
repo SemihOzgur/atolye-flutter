@@ -52,6 +52,10 @@ mixin _$WorkOrderDto {
   List<WorkOrderSmsItemDto> get smsHistory =>
       throw _privateConstructorUsedError;
 
+  /// Fişe bağlı kalemse dolu; fiş öncesi eski kayıtlarda null.
+  int? get receiptId => throw _privateConstructorUsedError;
+  String? get receiptNumber => throw _privateConstructorUsedError;
+
   /// Serializes this WorkOrderDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -96,7 +100,9 @@ abstract class $WorkOrderDtoCopyWith<$Res> {
       List<StatusLogDto> statusHistory,
       DateTime createdAt,
       DateTime updatedAt,
-      List<WorkOrderSmsItemDto> smsHistory});
+      List<WorkOrderSmsItemDto> smsHistory,
+      int? receiptId,
+      String? receiptNumber});
 
   $CustomerDtoCopyWith<$Res> get customer;
 }
@@ -144,6 +150,8 @@ class _$WorkOrderDtoCopyWithImpl<$Res, $Val extends WorkOrderDto>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? smsHistory = null,
+    Object? receiptId = freezed,
+    Object? receiptNumber = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -258,6 +266,14 @@ class _$WorkOrderDtoCopyWithImpl<$Res, $Val extends WorkOrderDto>
           ? _value.smsHistory
           : smsHistory // ignore: cast_nullable_to_non_nullable
               as List<WorkOrderSmsItemDto>,
+      receiptId: freezed == receiptId
+          ? _value.receiptId
+          : receiptId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      receiptNumber: freezed == receiptNumber
+          ? _value.receiptNumber
+          : receiptNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 
@@ -308,7 +324,9 @@ abstract class _$$WorkOrderDtoImplCopyWith<$Res>
       List<StatusLogDto> statusHistory,
       DateTime createdAt,
       DateTime updatedAt,
-      List<WorkOrderSmsItemDto> smsHistory});
+      List<WorkOrderSmsItemDto> smsHistory,
+      int? receiptId,
+      String? receiptNumber});
 
   @override
   $CustomerDtoCopyWith<$Res> get customer;
@@ -355,6 +373,8 @@ class __$$WorkOrderDtoImplCopyWithImpl<$Res>
     Object? createdAt = null,
     Object? updatedAt = null,
     Object? smsHistory = null,
+    Object? receiptId = freezed,
+    Object? receiptNumber = freezed,
   }) {
     return _then(_$WorkOrderDtoImpl(
       id: null == id
@@ -469,6 +489,14 @@ class __$$WorkOrderDtoImplCopyWithImpl<$Res>
           ? _value._smsHistory
           : smsHistory // ignore: cast_nullable_to_non_nullable
               as List<WorkOrderSmsItemDto>,
+      receiptId: freezed == receiptId
+          ? _value.receiptId
+          : receiptId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      receiptNumber: freezed == receiptNumber
+          ? _value.receiptNumber
+          : receiptNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -507,7 +535,9 @@ class _$WorkOrderDtoImpl implements _WorkOrderDto {
       required this.createdAt,
       required this.updatedAt,
       final List<WorkOrderSmsItemDto> smsHistory =
-          const <WorkOrderSmsItemDto>[]})
+          const <WorkOrderSmsItemDto>[],
+      this.receiptId,
+      this.receiptNumber})
       : _services = services,
         _consumables = consumables,
         _media = media,
@@ -608,9 +638,15 @@ class _$WorkOrderDtoImpl implements _WorkOrderDto {
     return EqualUnmodifiableListView(_smsHistory);
   }
 
+  /// Fişe bağlı kalemse dolu; fiş öncesi eski kayıtlarda null.
+  @override
+  final int? receiptId;
+  @override
+  final String? receiptNumber;
+
   @override
   String toString() {
-    return 'WorkOrderDto(id: $id, orderNumber: $orderNumber, customer: $customer, categoryId: $categoryId, categoryPath: $categoryPath, brand: $brand, color: $color, material: $material, description: $description, existingDamages: $existingDamages, estimatedDeliveryDate: $estimatedDeliveryDate, services: $services, consumables: $consumables, suggestedPrice: $suggestedPrice, price: $price, hasPrepayment: $hasPrepayment, prepaymentAmount: $prepaymentAmount, remainingAmount: $remainingAmount, status: $status, socialMediaConsent: $socialMediaConsent, trackingUrl: $trackingUrl, deliveredAt: $deliveredAt, finalPaymentAmount: $finalPaymentAmount, media: $media, statusHistory: $statusHistory, createdAt: $createdAt, updatedAt: $updatedAt, smsHistory: $smsHistory)';
+    return 'WorkOrderDto(id: $id, orderNumber: $orderNumber, customer: $customer, categoryId: $categoryId, categoryPath: $categoryPath, brand: $brand, color: $color, material: $material, description: $description, existingDamages: $existingDamages, estimatedDeliveryDate: $estimatedDeliveryDate, services: $services, consumables: $consumables, suggestedPrice: $suggestedPrice, price: $price, hasPrepayment: $hasPrepayment, prepaymentAmount: $prepaymentAmount, remainingAmount: $remainingAmount, status: $status, socialMediaConsent: $socialMediaConsent, trackingUrl: $trackingUrl, deliveredAt: $deliveredAt, finalPaymentAmount: $finalPaymentAmount, media: $media, statusHistory: $statusHistory, createdAt: $createdAt, updatedAt: $updatedAt, smsHistory: $smsHistory, receiptId: $receiptId, receiptNumber: $receiptNumber)';
   }
 
   @override
@@ -666,7 +702,11 @@ class _$WorkOrderDtoImpl implements _WorkOrderDto {
             (identical(other.updatedAt, updatedAt) ||
                 other.updatedAt == updatedAt) &&
             const DeepCollectionEquality()
-                .equals(other._smsHistory, _smsHistory));
+                .equals(other._smsHistory, _smsHistory) &&
+            (identical(other.receiptId, receiptId) ||
+                other.receiptId == receiptId) &&
+            (identical(other.receiptNumber, receiptNumber) ||
+                other.receiptNumber == receiptNumber));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -700,7 +740,9 @@ class _$WorkOrderDtoImpl implements _WorkOrderDto {
         const DeepCollectionEquality().hash(_statusHistory),
         createdAt,
         updatedAt,
-        const DeepCollectionEquality().hash(_smsHistory)
+        const DeepCollectionEquality().hash(_smsHistory),
+        receiptId,
+        receiptNumber
       ]);
 
   /// Create a copy of WorkOrderDto
@@ -748,7 +790,9 @@ abstract class _WorkOrderDto implements WorkOrderDto {
       final List<StatusLogDto> statusHistory,
       required final DateTime createdAt,
       required final DateTime updatedAt,
-      final List<WorkOrderSmsItemDto> smsHistory}) = _$WorkOrderDtoImpl;
+      final List<WorkOrderSmsItemDto> smsHistory,
+      final int? receiptId,
+      final String? receiptNumber}) = _$WorkOrderDtoImpl;
 
   factory _WorkOrderDto.fromJson(Map<String, dynamic> json) =
       _$WorkOrderDtoImpl.fromJson;
@@ -809,6 +853,12 @@ abstract class _WorkOrderDto implements WorkOrderDto {
   DateTime get updatedAt;
   @override
   List<WorkOrderSmsItemDto> get smsHistory;
+
+  /// Fişe bağlı kalemse dolu; fiş öncesi eski kayıtlarda null.
+  @override
+  int? get receiptId;
+  @override
+  String? get receiptNumber;
 
   /// Create a copy of WorkOrderDto
   /// with the given fields replaced by the non-null parameter values.

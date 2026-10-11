@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leather_care_admin/core/network/api_exception.dart';
 import 'package:leather_care_admin/features/customer/data/dto/customer_dto.dart';
+import 'package:leather_care_admin/features/receipt/data/dto/receipt_dto.dart';
 import 'package:leather_care_admin/features/scanner/presentation/cubit/scan_resolve_cubit.dart';
 import 'package:leather_care_admin/features/scanner/presentation/cubit/scan_resolve_state.dart';
 import 'package:leather_care_admin/features/work_order/data/dto/work_order_dto.dart';
 
+import '../../../receipt/fakes/fake_receipt_repository.dart';
+import '../../../receipt/fakes/receipt_fixtures.dart';
 import '../../../work_order/fakes/fake_work_order_repository.dart';
 
 WorkOrderDto _workOrder({int id = 5}) {
@@ -44,6 +47,35 @@ void main() {
 
   tearDown(() {
     cubit.close();
+  });
+
+  group('receipt barcodes (FS-)', () {
+    late FakeReceiptRepository receipts;
+    late ScanResolveCubit receiptCubit;
+
+    setUp(() {
+      receipts = FakeReceiptRepository();
+      receiptCubit = ScanResolveCubit(repository, receipts);
+    });
+
+    tearDown(() => receiptCubit.close());
+
+    test('resolves to the receipt id', () async {
+      receipts.receiptToReturn = ReceiptDto.fromJson(receiptJson());
+
+      await receiptCubit.resolve('FS-2026-000042');
+
+      expect(receiptCubit.state.status, ScanResolveStatus.resolved);
+      expect(receiptCubit.state.resolvedReceiptId, 7);
+      expect(receiptCubit.state.resolvedWorkOrderId, isNull);
+      expect(receipts.lastFindQuery, 'FS-2026-000042');
+      expect(repository.lastFindByOrderNumberQuery, isNull);
+    });
+
+    test('emits notFound for an unknown receipt number', () async {
+      await receiptCubit.resolve('FS-2099-999999');
+      expect(receiptCubit.state.status, ScanResolveStatus.notFound);
+    });
   });
 
   test('starts idle', () {

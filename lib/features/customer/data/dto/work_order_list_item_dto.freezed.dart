@@ -31,6 +31,8 @@ mixin _$WorkOrderListItemDto {
   double get remainingAmount => throw _privateConstructorUsedError;
   DateTime? get estimatedDeliveryDate => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
+  int? get receiptId => throw _privateConstructorUsedError;
+  String? get receiptNumber => throw _privateConstructorUsedError;
 
   /// Serializes this WorkOrderListItemDto to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -59,7 +61,9 @@ abstract class $WorkOrderListItemDtoCopyWith<$Res> {
       double price,
       double remainingAmount,
       DateTime? estimatedDeliveryDate,
-      DateTime createdAt});
+      DateTime createdAt,
+      int? receiptId,
+      String? receiptNumber});
 }
 
 /// @nodoc
@@ -89,6 +93,8 @@ class _$WorkOrderListItemDtoCopyWithImpl<$Res,
     Object? remainingAmount = null,
     Object? estimatedDeliveryDate = freezed,
     Object? createdAt = null,
+    Object? receiptId = freezed,
+    Object? receiptNumber = freezed,
   }) {
     return _then(_value.copyWith(
       id: null == id
@@ -135,6 +141,14 @@ class _$WorkOrderListItemDtoCopyWithImpl<$Res,
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      receiptId: freezed == receiptId
+          ? _value.receiptId
+          : receiptId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      receiptNumber: freezed == receiptNumber
+          ? _value.receiptNumber
+          : receiptNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
     ) as $Val);
   }
 }
@@ -158,7 +172,9 @@ abstract class _$$WorkOrderListItemDtoImplCopyWith<$Res>
       double price,
       double remainingAmount,
       DateTime? estimatedDeliveryDate,
-      DateTime createdAt});
+      DateTime createdAt,
+      int? receiptId,
+      String? receiptNumber});
 }
 
 /// @nodoc
@@ -185,6 +201,8 @@ class __$$WorkOrderListItemDtoImplCopyWithImpl<$Res>
     Object? remainingAmount = null,
     Object? estimatedDeliveryDate = freezed,
     Object? createdAt = null,
+    Object? receiptId = freezed,
+    Object? receiptNumber = freezed,
   }) {
     return _then(_$WorkOrderListItemDtoImpl(
       id: null == id
@@ -231,6 +249,14 @@ class __$$WorkOrderListItemDtoImplCopyWithImpl<$Res>
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
+      receiptId: freezed == receiptId
+          ? _value.receiptId
+          : receiptId // ignore: cast_nullable_to_non_nullable
+              as int?,
+      receiptNumber: freezed == receiptNumber
+          ? _value.receiptNumber
+          : receiptNumber // ignore: cast_nullable_to_non_nullable
+              as String?,
     ));
   }
 }
@@ -249,7 +275,9 @@ class _$WorkOrderListItemDtoImpl implements _WorkOrderListItemDto {
       required this.price,
       required this.remainingAmount,
       this.estimatedDeliveryDate,
-      required this.createdAt});
+      required this.createdAt,
+      this.receiptId,
+      this.receiptNumber});
 
   factory _$WorkOrderListItemDtoImpl.fromJson(Map<String, dynamic> json) =>
       _$$WorkOrderListItemDtoImplFromJson(json);
@@ -276,10 +304,14 @@ class _$WorkOrderListItemDtoImpl implements _WorkOrderListItemDto {
   final DateTime? estimatedDeliveryDate;
   @override
   final DateTime createdAt;
+  @override
+  final int? receiptId;
+  @override
+  final String? receiptNumber;
 
   @override
   String toString() {
-    return 'WorkOrderListItemDto(id: $id, orderNumber: $orderNumber, customerFullName: $customerFullName, customerPhone: $customerPhone, categoryPath: $categoryPath, brand: $brand, status: $status, price: $price, remainingAmount: $remainingAmount, estimatedDeliveryDate: $estimatedDeliveryDate, createdAt: $createdAt)';
+    return 'WorkOrderListItemDto(id: $id, orderNumber: $orderNumber, customerFullName: $customerFullName, customerPhone: $customerPhone, categoryPath: $categoryPath, brand: $brand, status: $status, price: $price, remainingAmount: $remainingAmount, estimatedDeliveryDate: $estimatedDeliveryDate, createdAt: $createdAt, receiptId: $receiptId, receiptNumber: $receiptNumber)';
   }
 
   @override
@@ -304,7 +336,11 @@ class _$WorkOrderListItemDtoImpl implements _WorkOrderListItemDto {
             (identical(other.estimatedDeliveryDate, estimatedDeliveryDate) ||
                 other.estimatedDeliveryDate == estimatedDeliveryDate) &&
             (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt));
+                other.createdAt == createdAt) &&
+            (identical(other.receiptId, receiptId) ||
+                other.receiptId == receiptId) &&
+            (identical(other.receiptNumber, receiptNumber) ||
+                other.receiptNumber == receiptNumber));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -321,7 +357,9 @@ class _$WorkOrderListItemDtoImpl implements _WorkOrderListItemDto {
       price,
       remainingAmount,
       estimatedDeliveryDate,
-      createdAt);
+      createdAt,
+      receiptId,
+      receiptNumber);
 
   /// Create a copy of WorkOrderListItemDto
   /// with the given fields replaced by the non-null parameter values.
@@ -353,7 +391,9 @@ abstract class _WorkOrderListItemDto implements WorkOrderListItemDto {
       required final double price,
       required final double remainingAmount,
       final DateTime? estimatedDeliveryDate,
-      required final DateTime createdAt}) = _$WorkOrderListItemDtoImpl;
+      required final DateTime createdAt,
+      final int? receiptId,
+      final String? receiptNumber}) = _$WorkOrderListItemDtoImpl;
 
   factory _WorkOrderListItemDto.fromJson(Map<String, dynamic> json) =
       _$WorkOrderListItemDtoImpl.fromJson;
@@ -380,6 +420,10 @@ abstract class _WorkOrderListItemDto implements WorkOrderListItemDto {
   DateTime? get estimatedDeliveryDate;
   @override
   DateTime get createdAt;
+  @override
+  int? get receiptId;
+  @override
+  String? get receiptNumber;
 
   /// Create a copy of WorkOrderListItemDto
   /// with the given fields replaced by the non-null parameter values.

@@ -58,6 +58,8 @@ _$WorkOrderDtoImpl _$$WorkOrderDtoImplFromJson(Map<String, dynamic> json) =>
                   WorkOrderSmsItemDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <WorkOrderSmsItemDto>[],
+      receiptId: (json['receiptId'] as num?)?.toInt(),
+      receiptNumber: json['receiptNumber'] as String?,
     );
 
 Map<String, dynamic> _$$WorkOrderDtoImplToJson(_$WorkOrderDtoImpl instance) =>
@@ -91,4 +93,6 @@ Map<String, dynamic> _$$WorkOrderDtoImplToJson(_$WorkOrderDtoImpl instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'smsHistory': instance.smsHistory,
+      'receiptId': instance.receiptId,
+      'receiptNumber': instance.receiptNumber,
     };

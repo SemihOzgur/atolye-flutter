@@ -20,6 +20,7 @@ import '../../domain/status_transitions.dart';
 import '../widgets/status_bottom_sheet.dart';
 import '../widgets/status_timeline.dart';
 import '../widgets/work_order_status_badge.dart';
+import '../../../receipt/presentation/widgets/receipt_link_chip.dart';
 
 /// Mobil kabuk ürün detayı — çoğunlukla read-only; yazma aksiyonları status
 /// değişimi, medya (foto/video) ekleme ve teslim (Product Create/Detail
@@ -186,6 +187,13 @@ class _MobileWorkOrderDetailView extends StatelessWidget {
                           WorkOrderStatusBadge(status: workOrder.status),
                         ],
                       ),
+                      if (workOrder.receiptId != null) ...[
+                        const SizedBox(height: AppDimensions.spaceS),
+                        ReceiptLinkChip(
+                          receiptId: workOrder.receiptId,
+                          receiptNumber: workOrder.receiptNumber,
+                        ),
+                      ],
                       const SizedBox(height: AppDimensions.spaceL),
                       _InfoCard(
                         children: [

@@ -14,7 +14,7 @@ import '../cubit/customer_detail_state.dart';
 import '../widgets/iys_status_badge.dart';
 
 /// Mobil müşteri detayı — Product Create'in önkoşulu. Yalnızca kimlik
-/// bilgisi + "Yeni Ürün" girişini gösterir. Müşteri düzenleme, İYS onay
+/// bilgisi + "Yeni Fiş" girişini gösterir. Müşteri düzenleme, İYS onay
 /// paneli ve geçmiş iş emri listesi bu sprint kapsamı dışıdır (yalnızca
 /// Product Create/Detail — bkz. görev kapsamı).
 class MobileCustomerDetailPage extends StatelessWidget {
@@ -118,7 +118,7 @@ class _MobileCustomerDetailView extends StatelessWidget {
                       '${AppRoutes.workOrders}/new?customerId=${customer.id}',
                     ),
                     icon: const Icon(Icons.add_rounded),
-                    label: const Text('Yeni Ürün'),
+                    label: const Text('Yeni Fiş'),
                   ),
                 ),
               ],

@@ -11,6 +11,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../core/widgets/skeleton_box.dart';
 import '../../../media/presentation/widgets/media_section.dart';
+import '../../../receipt/presentation/widgets/receipt_link_chip.dart';
 import '../../../receipt_printing/presentation/print_receipt_action.dart';
 import '../../data/work_order_repository.dart';
 import '../cubit/work_order_detail_cubit.dart';
@@ -236,6 +237,13 @@ class _WorkOrderDetailView extends StatelessWidget {
                 '${DateFormat('dd.MM.yyyy HH:mm').format(workOrder.createdAt.toLocal())}',
                 style: const TextStyle(color: AppColors.textMuted),
               ),
+              if (workOrder.receiptId != null) ...[
+                const SizedBox(height: AppDimensions.spaceS),
+                ReceiptLinkChip(
+                  receiptId: workOrder.receiptId,
+                  receiptNumber: workOrder.receiptNumber,
+                ),
+              ],
               const SizedBox(height: AppDimensions.spaceL),
 
               Card(

@@ -17,6 +17,8 @@ class WorkOrderListItemDto with _$WorkOrderListItemDto {
     required double remainingAmount,
     DateTime? estimatedDeliveryDate,
     required DateTime createdAt,
+    int? receiptId,
+    String? receiptNumber,
   }) = _WorkOrderListItemDto;
 
   factory WorkOrderListItemDto.fromJson(Map<String, dynamic> json) =>

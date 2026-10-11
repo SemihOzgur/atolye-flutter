@@ -124,7 +124,13 @@ class MediaUploadCubit extends Cubit<MediaUploadState> {
       _updateTask(task.copyWith(status: UploadTaskStatus.confirming));
       await _repository.confirmUpload(workOrderId, uploadResponse.mediaFileId);
 
-      _updateTask(task.copyWith(status: UploadTaskStatus.done, progress: 1));
+      _updateTask(
+        task.copyWith(
+          status: UploadTaskStatus.done,
+          progress: 1,
+          mediaFileId: uploadResponse.mediaFileId,
+        ),
+      );
       if (!isClosed) {
         onUploadConfirmed?.call();
       }

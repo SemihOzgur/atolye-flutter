@@ -6,10 +6,11 @@ import '../../features/customer/presentation/pages/mobile_customer_detail_page.d
 import '../../features/customer/presentation/pages/mobile_customer_form_page.dart';
 import '../../features/customer/presentation/pages/mobile_customer_search_page.dart';
 import '../../features/dashboard/presentation/pages/mobile_dashboard_page.dart';
+import '../../features/receipt/presentation/pages/receipt_detail_page.dart';
+import '../../features/receipt/presentation/pages/receipt_form_page.dart';
 import '../../features/scanner/presentation/pages/camera_permission_page.dart';
 import '../../features/scanner/presentation/pages/scanner_page.dart';
 import '../../features/work_order/presentation/pages/mobile_work_order_detail_page.dart';
-import '../../features/work_order/presentation/pages/mobile_work_order_form_page.dart';
 import '../../features/work_order/presentation/pages/mobile_work_order_list_page.dart';
 import '../app_routes.dart';
 import '../app_startup_controller.dart';
@@ -80,9 +81,17 @@ GoRouter buildMobileRouter(
       ),
       GoRoute(
         path: '${AppRoutes.workOrders}/new',
-        builder: (context, state) => MobileWorkOrderFormPage(
+        builder: (context, state) => ReceiptFormPage(
           customerId:
               int.parse(state.uri.queryParameters['customerId']!),
+          showAppBar: true,
+        ),
+      ),
+      GoRoute(
+        path: '${AppRoutes.receipts}/:id',
+        builder: (context, state) => ReceiptDetailPage(
+          receiptId: int.parse(state.pathParameters['id']!),
+          showAppBar: true,
         ),
       ),
       GoRoute(

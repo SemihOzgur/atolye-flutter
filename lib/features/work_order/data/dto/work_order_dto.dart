@@ -43,6 +43,9 @@ class WorkOrderDto with _$WorkOrderDto {
     required DateTime createdAt,
     required DateTime updatedAt,
     @Default(<WorkOrderSmsItemDto>[]) List<WorkOrderSmsItemDto> smsHistory,
+    /// Fişe bağlı kalemse dolu; fiş öncesi eski kayıtlarda null.
+    int? receiptId,
+    String? receiptNumber,
   }) = _WorkOrderDto;
 
   factory WorkOrderDto.fromJson(Map<String, dynamic> json) =>

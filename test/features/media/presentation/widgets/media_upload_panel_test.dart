@@ -19,13 +19,13 @@ void main() {
     );
   });
 
-  Widget buildSubject({int existingMediaCount = 0}) {
+  Widget buildSubject({Set<int> existingMediaIds = const <int>{}}) {
     return MaterialApp(
       theme: AppTheme.light(),
       home: Scaffold(
         body: BlocProvider<MediaUploadCubit>.value(
           value: cubit,
-          child: MediaUploadPanel(existingMediaCount: existingMediaCount),
+          child: MediaUploadPanel(existingMediaIds: existingMediaIds),
         ),
       ),
     );
@@ -52,7 +52,9 @@ void main() {
   testWidgets('disables the pick button once the 20-media limit is reached', (
     tester,
   ) async {
-    await tester.pumpWidget(buildSubject(existingMediaCount: 20));
+    await tester.pumpWidget(
+      buildSubject(existingMediaIds: {for (var i = 1; i <= 20; i++) i}),
+    );
 
     expect(find.text('20/20'), findsOneWidget);
 
