@@ -40,8 +40,10 @@ void main() {
     );
 
     expect(data.items, hasLength(2));
-    expect(data.items.first.productType, 'Sneakers Ayakkabı');
-    expect(data.items.last.details, 'Puma · Beyaz');
+    expect(data.items.first.categoryPath, 'Kadın > Ayakkabı > Sneakers Ayakkabı');
+    expect(data.items.first.orderNumber, 'WO-2026-000011');
+    expect(data.items.last.brand, 'Puma');
+    expect(data.items.first.description, 'Dikiş-Yapıştırma-Boya');
     expect(data.phone, isNot(contains('1234567')));
     expect(data.estimatedDeliveryDate, DateTime(2026, 10, 15));
     expect(data.totalPrice, 1500);
@@ -56,10 +58,19 @@ void main() {
     final bytes = const EscPosBuilder().buildSlip(data);
 
     expect(_contains(bytes, 'FS-2026-000042'), isTrue);
-    expect(_contains(bytes, '1) Sneakers Ayakkabı'), isTrue);
-    expect(_contains(bytes, '2) Sneakers Ayakkabı'), isTrue);
-    expect(_contains(bytes, '- Bakım ve Boya'), isTrue);
-    expect(_contains(bytes, 'Detay: Burunda çizik'), isTrue);
+    // Her ürün için tek ürünlük fişteki bilgilerin tamamı (eski fişle aynı)
+    expect(_contains(bytes, '1) Kadın > Ayakkabı > Sneakers Ayakkabı'), isTrue);
+    expect(_contains(bytes, '2) Kadın > Ayakkabı > Sneakers Ayakkabı'), isTrue);
+    expect(_contains(bytes, '   WO-2026-000011'), isTrue);
+    expect(_contains(bytes, '   Marka: Puma'), isTrue);
+    expect(_contains(bytes, '   Renk: Beyaz'), isTrue);
+    expect(_contains(bytes, '   Malzeme: Deri'), isTrue);
+    expect(_contains(bytes, '   Açıklama: Dikiş-Yapıştırma-Boya'), isTrue);
+    expect(_contains(bytes, '   Detay: Burunda çizik'), isTrue);
+    expect(_contains(bytes, '   Yapılan İşlemler:'), isTrue);
+    expect(_contains(bytes, '   - Bakım ve Boya'), isTrue);
+    expect(_contains(bytes, '   Sarf Malzemeleri:'), isTrue);
+    expect(_contains(bytes, '   - Deri Bakım Kremi x2'), isTrue);
     expect(_contains(bytes, 'İptal'), isFalse);
     expect(_contains(bytes, 'TOPLAM'), isTrue);
     expect(_contains(bytes, 'KALAN'), isTrue);
@@ -72,6 +83,9 @@ void main() {
       }
     }
     expect(barcodes, 1);
+
+    // CP857'de olmayan karakter (eski "·" ayırıcı) "?" olarak basılmaz
+    expect(bytes.contains(0x3F), isFalse);
   });
 
   test('pair lines never exceed the 48-column paper width', () {
@@ -82,8 +96,8 @@ void main() {
       createdAt: DateTime(2026),
       items: const [
         ReceiptSlipItem(
-          productType: 'Çok çok uzun bir ürün türü adı ki kağıda sığmasın diye',
-          details: '',
+          orderNumber: 'WO-2026-000001',
+          categoryPath: 'Çok çok uzun bir ürün türü adı ki kağıda sığmasın diye',
           price: 123456.78,
           statusLabel: 'Hazır',
         ),

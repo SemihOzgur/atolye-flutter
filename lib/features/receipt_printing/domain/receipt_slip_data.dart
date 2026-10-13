@@ -40,10 +40,12 @@ class ReceiptSlipData {
       items: active
           .map(
             (item) => ReceiptSlipItem(
-              productType: item.categoryPath.split(' > ').last,
-              details: [item.brand, item.color, item.material]
-                  .whereType<String>()
-                  .join(' · '),
+              orderNumber: item.orderNumber,
+              categoryPath: item.categoryPath,
+              brand: item.brand,
+              color: item.color,
+              material: item.material,
+              description: item.description,
               existingDamages: item.existingDamages,
               serviceNames: item.serviceNames,
               consumableNames: item.consumableNames,
@@ -75,10 +77,17 @@ class ReceiptSlipData {
   final DateTime printedAt;
 }
 
+/// Fişteki tek ürün — tek ürünlük iş emri fişindeki ([ReceiptData]) bilgilerin
+/// aynısı: tam kategori yolu, marka/renk/malzeme, açıklama, detay, yapılan
+/// işlemler ve sarf malzemeleri.
 class ReceiptSlipItem {
   const ReceiptSlipItem({
-    required this.productType,
-    required this.details,
+    required this.orderNumber,
+    required this.categoryPath,
+    this.brand,
+    this.color,
+    this.material,
+    this.description,
     this.existingDamages,
     this.serviceNames = const [],
     this.consumableNames = const [],
@@ -86,8 +95,12 @@ class ReceiptSlipItem {
     required this.statusLabel,
   });
 
-  final String productType;
-  final String details;
+  final String orderNumber;
+  final String categoryPath;
+  final String? brand;
+  final String? color;
+  final String? material;
+  final String? description;
   final String? existingDamages;
   final List<String> serviceNames;
   final List<String> consumableNames;
