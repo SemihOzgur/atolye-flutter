@@ -91,23 +91,8 @@ class EscPosBuilder {
 
     for (var i = 0; i < data.items.length; i++) {
       final item = data.items[i];
-      out.add(_pair('${i + 1}) ${item.productType}', _formatCurrencyTl(item.price)));
-      if (item.details.isNotEmpty) {
-        for (final line in _wrap('   ${item.details}')) {
-          out.add(_line(line));
-        }
-      }
-      for (final name in [...item.serviceNames, ...item.consumableNames]) {
-        for (final line in _wrap('   - $name')) {
-          out.add(_line(line));
-        }
-      }
-      final damages = item.existingDamages;
-      if (damages != null && damages.trim().isNotEmpty) {
-        for (final line in _wrap('   Detay: $damages')) {
-          out.add(_line(line));
-        }
-      }
+      if (i > 0) out.add(_line(_rule(char: '.')));
+      out.add(_slipItem(i + 1, item));
     }
     out.add(_line(_rule()));
 
@@ -136,6 +121,45 @@ class EscPosBuilder {
     return out.toBytes();
   }
 
+  /// Tek ürün bloğu — tek ürünlük fişle ([_buildSingleCopy]) aynı alanlar,
+  /// 3 boşluk girintili. Boş alan satır olarak basılmaz. Ayırıcı olarak
+  /// CP857'de karşılığı olmayan "·" yerine ASCII kullanılır (yoksa "?" basar).
+  List<int> _slipItem(int number, ReceiptSlipItem item) {
+    const indent = '   ';
+    final out = <int>[];
+
+    for (final line in _wrap('$number) ${item.categoryPath}')) {
+      out.addAll(_line(line));
+    }
+    out.addAll(_pair('$indent${item.orderNumber}', _formatCurrencyTl(item.price)));
+
+    void field(String label, String? value) {
+      if (value == null || value.trim().isEmpty) return;
+      for (final line in _wrapIndented(indent, '$label: ${value.trim()}')) {
+        out.addAll(_line(line));
+      }
+    }
+
+    void list(String title, List<String> items) {
+      if (items.isEmpty) return;
+      out.addAll(_line('$indent$title:'));
+      for (final name in items) {
+        for (final line in _wrapIndented(indent, '- $name')) {
+          out.addAll(_line(line));
+        }
+      }
+    }
+
+    field('Marka', item.brand);
+    field('Renk', item.color);
+    field('Malzeme', item.material);
+    field('Açıklama', item.description);
+    field('Detay', item.existingDamages);
+    list('Yapılan İşlemler', item.serviceNames);
+    list('Sarf Malzemeleri', item.consumableNames);
+    return out;
+  }
+
   /// Sola dayalı etiket + sağa dayalı tutar tek satırda; sığmazsa etiket
   /// kırpılır (tutar asla kesilmez).
   List<int> _pair(String left, String right) {
@@ -144,7 +168,7 @@ class EscPosBuilder {
     return _line('${label.padRight(room)} $right');
   }
 
-  String _rule() => '-' * columnWidth;
+  String _rule({String char = '-'}) => char * columnWidth;
 
   /// TANI ARACI (F4-QA1): `_selectCp857`'nin bu yazıcıda doğru CP857
   /// bastığı sahada doğrulanmıştır (ESC t 57). Farklı bir yazıcı modeline
@@ -360,7 +384,15 @@ class EscPosBuilder {
     ];
   }
 
-  List<String> _wrap(String text) {
+  /// Girintili sarmalama: metin kalan genişliğe sarılır, her satıra
+  /// [indent] eklenir ([_wrap] baştaki boşlukları korumaz).
+  List<String> _wrapIndented(String indent, String text) =>
+      _wrap(text, width: columnWidth - indent.length)
+          .map((line) => '$indent$line')
+          .toList();
+
+  List<String> _wrap(String text, {int? width}) {
+    final columnWidth = width ?? this.columnWidth;
     if (text.trim().isEmpty) return const [];
 
     final words = text.split(RegExp(r'\s+'));
